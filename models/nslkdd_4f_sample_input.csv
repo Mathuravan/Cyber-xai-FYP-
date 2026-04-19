@@ -1,0 +1,6 @@
+duration,src_bytes,dst_bytes,count,actual_label
+0,0,0,229,1
+0,0,0,136,1
+2,12983,0,1,0
+0,20,0,1,1
+1,0,15,1,1
