@@ -66,6 +66,14 @@ body {
   box-sizing: border-box;
 }
 
+body:has(.dashboard-app) #root {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  text-align: left;
+  border: none;
+}
+
 h1,
 h2 {
   font-family: var(--heading);
