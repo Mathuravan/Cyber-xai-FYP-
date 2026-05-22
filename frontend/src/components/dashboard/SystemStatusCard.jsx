@@ -11,10 +11,10 @@ export default function SystemStatusCard({ backendOk, apiBase }) {
   }
 
   return (
-    <motionless className="card">
+    <div className="card">
       <h3>System status</h3>
       <p className={`status-pill ${statusClass}`}>{statusText}</p>
       <p className="card-meta">API: {apiBase}</p>
-    </motionless>
+    </div>
   )
 }

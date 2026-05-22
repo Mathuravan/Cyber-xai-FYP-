@@ -48,47 +48,47 @@ export default function Dashboard() {
   const showLogs = activeMenu === "logs"
 
   return (
-    <motionless className="app dashboard-app">
+    <div className="app dashboard-app">
       <Sidebar
         activeMenu={activeMenu}
         onMenuClick={setActiveMenu}
         onLogout={handleLogout}
       />
 
-      <motionless className="main">
-        <motionless className="topbar">
+      <div className="main">
+        <div className="topbar">
           <h1>Security dashboard</h1>
           <p>AI-powered intrusion detection overview</p>
-        </motionless>
+        </div>
 
         {showOverview && (
           <>
-            <motionless className="cards">
+            <div className="cards">
               <SystemStatusCard backendOk={backendOk} apiBase={API_BASE} />
               <LatestPredictionCard prediction={latestPrediction} />
               <CsvSummaryCard summary={csvSummary} />
-            </motionless>
+            </div>
 
             <QuickActionsPanel onDownloadSample={handleDownloadSample} />
           </>
         )}
 
         {activeMenu === "predict" && (
-          <motionless className="panel dashboard-panel">
+          <div className="panel dashboard-panel">
             <h2 className="page-title">Single predict</h2>
             <p className="page-subtitle">This page will be added in the next step.</p>
-          </motionless>
+          </div>
         )}
 
         {activeMenu === "batch" && (
-          <motionless className="panel dashboard-panel">
+          <div className="panel dashboard-panel">
             <h2 className="page-title">Batch CSV</h2>
             <p className="page-subtitle">Upload and batch prediction coming soon.</p>
-          </motionless>
+          </div>
         )}
 
         {showLogs && <AttackLogsPanel logs={attackLogs} />}
-      </motionless>
-    </motionless>
+      </div>
+    </div>
   )
 }
