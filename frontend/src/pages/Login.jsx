@@ -19,10 +19,6 @@ export default function Login() {
 
       const data = await login(username, password)
 
-      localStorage.setItem("cyberxai_token", data.token)
-      localStorage.setItem("cyberxai_user", data.user)
-
-
 
       navigate("/dashboard")
 

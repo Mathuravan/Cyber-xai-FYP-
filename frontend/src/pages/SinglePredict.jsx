@@ -1,14 +1,9 @@
 import { useState } from "react"
-
-import {
-  predictSingle
-} from "../services/predictionService"
-
+import { predictSingle } from "../services/predictionService"
 import {
   saveLatestPrediction,
   addAttackLog,
 } from "../services/storageService"
-
 
 const FEATURES = [
   {
@@ -33,7 +28,6 @@ const FEATURES = [
   },
 ]
 
-
 const EMPTY_FORM = {
   duration: "",
   src_bytes: "",
@@ -41,65 +35,35 @@ const EMPTY_FORM = {
   count: "",
 }
 
-
-// =====================================
-// THREAT LEVEL LOGIC
-// =====================================
-function getThreatLevel(
-  label,
-  confidence
-) {
-
+function getThreatLevel(label, confidence) {
   if (label === "Normal") {
-
     return {
       level: "Low",
       className: "ok",
     }
-
   }
 
   if (confidence >= 0.8) {
-
     return {
       level: "High",
       className: "bad",
     }
-
   }
 
   return {
     level: "Medium",
     className: "pending",
   }
-
 }
 
-
-// =====================================
-// COMPONENT
-// =====================================
 export default function SinglePredict() {
+  const [form, setForm] = useState(EMPTY_FORM)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [result, setResult] = useState(null)
 
-  const [form, setForm] =
-    useState(EMPTY_FORM)
-
-  const [loading, setLoading] =
-    useState(false)
-
-  const [error, setError] =
-    useState("")
-
-  const [result, setResult] =
-    useState(null)
-
-
-  // =====================================
-  // INPUT CHANGE
-  // =====================================
-  const handleChange = (e) => {
-
-    const { name, value } = e.target
+  const handleChange = (event) => {
+    const { name, value } = event.target
 
     setForm((prev) => ({
       ...prev,
@@ -107,15 +71,9 @@ export default function SinglePredict() {
     }))
 
     setError("")
-
   }
 
-
-  // =====================================
-  // SAMPLE VALUES
-  // =====================================
   const loadSampleValues = () => {
-
     setForm({
       duration: "12",
       src_bytes: "7000",
@@ -124,25 +82,16 @@ export default function SinglePredict() {
     })
 
     setError("")
-
   }
 
-
-  // =====================================
-  // SUBMIT FORM
-  // =====================================
-  const handleSubmit = async (e) => {
-
-    e.preventDefault()
-
-    setError("")
-
-    setResult(null)
+  const handleSubmit = async (event) => {
+    event.preventDefault()
 
     setLoading(true)
+    setError("")
+    setResult(null)
 
     try {
-
       const payload = {
         duration: Number(form.duration),
         src_bytes: Number(form.src_bytes),
@@ -150,29 +99,18 @@ export default function SinglePredict() {
         count: Number(form.count),
       }
 
-      if (
-        Object.values(payload).some(
-          (value) => Number.isNaN(value)
-        )
-      ) {
-
-        throw new Error(
-          "Please enter valid numbers."
-        )
-
+      if (Object.values(payload).some((value) => Number.isNaN(value))) {
+        throw new Error("Please enter valid numeric values.")
       }
 
-      const data =
-        await predictSingle(payload)
+      const data = await predictSingle(payload)
 
-      const threat =
-        getThreatLevel(
-          data.label,
-          data.confidence
-        )
+      const threat = getThreatLevel(
+        data.label,
+        data.confidence
+      )
 
-      const timestamp =
-        new Date().toLocaleString()
+      const timestamp = new Date().toLocaleString()
 
       const displayResult = {
         label: data.label,
@@ -188,51 +126,138 @@ export default function SinglePredict() {
         label: data.label,
         confidence: data.confidence,
         timestamp,
-        source: "Single predict",
+        source: "Single prediction",
         features: payload,
       }
 
       saveLatestPrediction(logEntry)
-
       addAttackLog(logEntry)
-
     } catch (err) {
-
       setError(
         err.message ||
-        "Prediction failed."
+          "Prediction failed. Make sure backend is running."
       )
-
     } finally {
-
       setLoading(false)
-
     }
-
   }
 
-
-  const labelClass =
-    result?.label?.toLowerCase() || ""
-
+  const labelClass = result?.label?.toLowerCase() || ""
 
   return (
-
     <div className="predict-page">
-
       <div className="topbar">
-
-        <h1>Single prediction</h1>
+        <h1>Single Prediction</h1>
 
         <p>
-          Analyze one network flow
-          using NSL-KDD features.
+          Analyze a single NSL-KDD network flow using the
+          CyberXAI intrusion detection API.
         </p>
-
       </div>
 
+      <div className="panel dashboard-panel">
+        <h2 className="page-title">
+          Network Traffic Features
+        </h2>
+
+        <p className="page-subtitle">
+          Enter traffic values and run a prediction.
+        </p>
+
+        <div className="example-buttons">
+          <button
+            type="button"
+            className="btn secondary-btn"
+            onClick={loadSampleValues}
+            disabled={loading}
+          >
+            Load Sample Values
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-grid">
+            {FEATURES.map((field) => (
+              <div
+                className="form-group"
+                key={field.name}
+              >
+                <label htmlFor={field.name}>
+                  {field.label}
+                </label>
+
+                <input
+                  id={field.name}
+                  name={field.name}
+                  type="number"
+                  min="0"
+                  step="any"
+                  placeholder={field.placeholder}
+                  value={form[field.name]}
+                  onChange={handleChange}
+                  required
+                  disabled={loading}
+                />
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="submit"
+            className="btn predict-submit-btn"
+            disabled={loading}
+          >
+            {loading
+              ? "Analyzing traffic..."
+              : "Run Prediction"}
+          </button>
+        </form>
+
+        {loading && (
+          <p className="loading-text">
+            Contacting backend API...
+          </p>
+        )}
+
+        {error && (
+          <p className="error-text">
+            {error}
+          </p>
+        )}
+
+        {result && (
+          <div className="result-box predict-result">
+            <h3>Prediction Result</h3>
+
+            <p>
+              <strong>Prediction:</strong>{" "}
+              <span
+                className={`prediction-label ${labelClass}`}
+              >
+                {result.label}
+              </span>
+            </p>
+
+            <p>
+              <strong>Confidence:</strong>{" "}
+              {(result.confidence * 100).toFixed(1)}%
+            </p>
+
+            <p>
+              <strong>Threat Level:</strong>{" "}
+              <span
+                className={`status-pill ${result.threatClass}`}
+              >
+                {result.threatLevel}
+              </span>
+            </p>
+
+            <p className="card-meta">
+              Timestamp: {result.timestamp}
+            </p>
+          </div>
+        )}
+      </div>
     </div>
-
   )
-
 }
