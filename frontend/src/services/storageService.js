@@ -104,3 +104,21 @@ export const addAttackLog = (log) => {
   );
 
 };
+
+// =======================
+// ADD MULTIPLE ATTACK LOGS
+// =======================
+export const addMultipleAttackLogs = (newLogs) => {
+
+  if (!newLogs || newLogs.length === 0) return;
+
+  const logs = getAttackLogs();
+
+  logs.unshift(...newLogs);
+
+  localStorage.setItem(
+    KEYS.logs,
+    JSON.stringify(logs)
+  );
+
+};
