@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { predictBatch } from "../services/predictionService";
+
 import {
   saveCsvSummary,
   addMultipleAttackLogs,
@@ -7,59 +8,89 @@ import {
 
 export default function BatchUpload() {
   const [file, setFile] = useState(null);
+
   const [loading, setLoading] = useState(false);
+
   const [error, setError] = useState("");
+
   const [summary, setSummary] = useState(null);
 
-  // Handle file selection
+  // =======================
+  // HANDLE FILE
+  // =======================
   const handleFileChange = (event) => {
-    if (event.target.files && event.target.files.length > 0) {
+    if (
+      event.target.files &&
+      event.target.files.length > 0
+    ) {
       setFile(event.target.files[0]);
+
       setError("");
     }
   };
 
-  // Handle batch prediction submission
+  // =======================
+  // HANDLE SUBMIT
+  // =======================
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!file) {
       setError("Please select a CSV file.");
+
       return;
     }
 
     setLoading(true);
+
     setError("");
+
     setSummary(null);
 
     try {
       const data = await predictBatch(file);
+
       setSummary(data);
 
-      // Save summary to local storage
+      // =======================
+      // SAVE CSV SUMMARY
+      // =======================
       saveCsvSummary({
         filename: data.filename,
         total_rows: data.total_rows,
         normal_count: data.normal_count,
         attack_count: data.attack_count,
-        timestamp: new Date().toLocaleString()
+        timestamp: new Date().toLocaleString(),
       });
 
-      // Filter attack results and save to logs
+      // =======================
+      // SAVE ATTACK LOGS
+      // =======================
       const attackLogs = data.results
-        .filter(row => row.label === "Attack")
-        .map(row => ({
+        .filter(
+          (row) => row.label === "Attack"
+        )
+        .map((row) => ({
           label: row.label,
+
           confidence: row.confidence,
-          timestamp: new Date().toLocaleString(),
+
+          timestamp:
+            new Date().toLocaleString(),
+
           source: `Batch: ${data.filename} (Row ${row.row})`,
         }));
 
       if (attackLogs.length > 0) {
-        addMultipleAttackLogs(attackLogs);
+        addMultipleAttackLogs(
+          attackLogs
+        );
       }
     } catch (err) {
-      setError(err.message || "Batch prediction failed.");
+      setError(
+        err.message ||
+          "Batch prediction failed."
+      );
     } finally {
       setLoading(false);
     }
@@ -67,15 +98,31 @@ export default function BatchUpload() {
 
   return (
     <div className="predict-page">
+      {/* =======================
+          HEADER
+      ======================= */}
       <div className="topbar">
         <h1>Batch CSV Prediction</h1>
-        <p>Upload an NSL-KDD CSV file for bulk intrusion analysis.</p>
+
+        <p>
+          Upload an NSL-KDD CSV file
+          for bulk intrusion analysis.
+        </p>
       </div>
 
+      {/* =======================
+          UPLOAD PANEL
+      ======================= */}
       <div className="panel dashboard-panel">
-        <form onSubmit={handleSubmit} className="upload-form">
+        <form
+          onSubmit={handleSubmit}
+          className="upload-form"
+        >
           <div className="form-group">
-            <label>Select CSV File</label>
+            <label>
+              Select CSV File
+            </label>
+
             <input
               type="file"
               accept=".csv"
@@ -87,65 +134,132 @@ export default function BatchUpload() {
           <button
             type="submit"
             className="btn"
-            disabled={loading || !file}
+            disabled={
+              loading || !file
+            }
           >
-            {loading ? "Uploading..." : "Run Batch Prediction"}
+            {loading
+              ? "Uploading..."
+              : "Run Batch Prediction"}
           </button>
         </form>
 
-        {error && <p className="error-text">{error}</p>}
+        {error && (
+          <p className="error-text">
+            {error}
+          </p>
+        )}
       </div>
 
+      {/* =======================
+          LOADING
+      ======================= */}
       {loading && (
         <div className="loading-state">
           <div className="spinner"></div>
-          <p>Processing CSV file... Please wait.</p>
+
+          <p>
+            Processing CSV file...
+            Please wait.
+          </p>
         </div>
       )}
 
+      {/* =======================
+          RESULTS
+      ======================= */}
       {summary && !loading && (
         <div className="batch-results">
+          {/* SUMMARY CARDS */}
           <div className="summary-cards">
             <div className="card">
               <h3>Total Rows</h3>
-              <p className="card-value">{summary.total_rows}</p>
+
+              <p className="card-value">
+                {summary.total_rows}
+              </p>
             </div>
+
             <div className="card">
-              <h3>Normal Traffic</h3>
-              <p className="card-value normal">{summary.normal_count}</p>
+              <h3>
+                Normal Traffic
+              </h3>
+
+              <p className="card-value normal">
+                {summary.normal_count}
+              </p>
             </div>
+
             <div className="card warning">
-              <h3>Attack Traffic</h3>
-              <p className="card-value attack">{summary.attack_count}</p>
+              <h3>
+                Attack Traffic
+              </h3>
+
+              <p className="card-value attack">
+                {summary.attack_count}
+              </p>
             </div>
           </div>
 
+          {/* RESULTS TABLE */}
           <div className="panel dashboard-panel results-table-panel">
-            <h2>Prediction Results</h2>
+            <h2>
+              Prediction Results
+            </h2>
+
             <div className="table-responsive">
               <table className="results-table">
                 <thead>
                   <tr>
                     <th>Row</th>
+
                     <th>Label</th>
-                    <th>Confidence</th>
+
+                    <th>
+                      Confidence
+                    </th>
                   </tr>
                 </thead>
+
                 <tbody>
-                  {summary.results.map((result, index) => (
-                    <tr 
-                      key={index} 
-                      className={result.label === "Attack" ? "attack-row" : "normal-row"}
-                    >
-                      <td>{result.row}</td>
-                      <td>
-                        <span className={`badge ${result.label.toLowerCase()}`}>
-                          {result.label}
-                        </span>
-                      </td>
-                      <td>{(result.confidence * 100).toFixed(1)}%</td>
-                    </tr>
-                  ))}
+                  {summary.results.map(
+                    (
+                      result,
+                      index
+                    ) => (
+                      <tr
+                        key={index}
+                        className={
+                          result.label ===
+                          "Attack"
+                            ? "attack-row"
+                            : "normal-row"
+                        }
+                      >
+                        <td>
+                          {result.row}
+                        </td>
+
+                        <td>
+                          <span
+                            className={`badge ${result.label.toLowerCase()}`}
+                          >
+                            {
+                              result.label
+                            }
+                          </span>
+                        </td>
+
+                        <td>
+                          {(
+                            result.confidence *
+                            100
+                          ).toFixed(1)}
+                          %
+                        </td>
+                      </tr>
+                    )
+                  )}
                 </tbody>
               </table>
             </div>
