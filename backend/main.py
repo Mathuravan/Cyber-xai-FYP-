@@ -3,8 +3,36 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 import pandas as pd
-
+import joblib
 from io import BytesIO
+from pathlib import Path
+
+# =====================================
+# PATH SETUP & MODEL LOADING
+# =====================================
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+MODEL_PATH = (
+    BASE_DIR
+    / "models"
+    / "nslkdd_4f_rf_model.joblib"
+)
+
+ml_model = None
+
+try:
+    if MODEL_PATH.exists():
+        ml_model = joblib.load(MODEL_PATH)
+        print(
+            f"Successfully loaded model: {MODEL_PATH}"
+        )
+    else:
+        print(
+            f"Model not found: {MODEL_PATH}"
+        )
+
+except Exception as e:
+    print(f"Error loading model: {e}")
 
 
 # =====================================
@@ -61,12 +89,11 @@ class PredictData(BaseModel):
 
 
 # =====================================
-# DUMMY PREDICTION LOGIC
+# HELPER FUNCTIONS
 # =====================================
 def dummy_predict(count: float) -> dict:
 
     if count > 50:
-
         return {
             "label": "Attack",
             "confidence": 0.85,
@@ -76,6 +103,17 @@ def dummy_predict(count: float) -> dict:
         "label": "Normal",
         "confidence": 0.92,
     }
+
+
+def get_threat_level(confidence: float):
+
+    if confidence >= 0.85:
+        return "High"
+
+    elif confidence >= 0.60:
+        return "Medium"
+
+    return "Low"
 
 
 # =====================================
@@ -98,7 +136,7 @@ def health():
     return {
         "status": "ok",
         "service": "CyberXAI",
-        "prediction_mode": "dummy",
+        "model_loaded": ml_model is not None,
     }
 
 
@@ -132,12 +170,71 @@ def login(data: LoginData):
 @app.post("/predict")
 def predict(data: PredictData):
 
-    result = dummy_predict(data.count)
+    if ml_model is None:
 
-    return {
-        "label": result["label"],
-        "confidence": result["confidence"],
-    }
+        raise HTTPException(
+            status_code=500,
+            detail="ML model not loaded."
+        )
+
+    try:
+
+        input_df = pd.DataFrame([{
+            "duration": data.duration,
+            "src_bytes": data.src_bytes,
+            "dst_bytes": data.dst_bytes,
+            "count": data.count,
+        }])
+
+        prediction = ml_model.predict(
+            input_df
+        )[0]
+
+        probabilities = (
+            ml_model.predict_proba(
+                input_df
+            )[0]
+        )
+
+        if prediction == 1:
+
+            label = "Attack"
+
+            confidence = float(
+                probabilities[1]
+            )
+
+            threat_level = (
+                get_threat_level(
+                    confidence
+                )
+            )
+
+        else:
+
+            label = "Normal"
+
+            confidence = float(
+                probabilities[0]
+            )
+
+            threat_level = "Safe"
+
+        return {
+            "label": label,
+            "confidence": round(
+                confidence,
+                4
+            ),
+            "threat_level": threat_level,
+        }
+
+    except Exception as e:
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Prediction failed: {str(e)}"
+        )
 
 
 # =====================================
@@ -148,12 +245,9 @@ async def predict_batch(
     file: UploadFile = File(...)
 ):
 
-    """
-    Dummy batch prediction logic.
-    """
-
     if (
-        not file.filename or
+        not file.filename
+        or
         not file.filename.lower().endswith(".csv")
     ):
 
@@ -206,11 +300,8 @@ async def predict_batch(
         confidence = prediction["confidence"]
 
         if label == "Normal":
-
             normal_count += 1
-
         else:
-
             attack_count += 1
 
         results.append({
