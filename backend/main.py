@@ -4,8 +4,10 @@ from pydantic import BaseModel
 
 import pandas as pd
 import joblib
+
 from io import BytesIO
 from pathlib import Path
+
 
 # =====================================
 # PATH SETUP & MODEL LOADING
@@ -21,18 +23,28 @@ MODEL_PATH = (
 ml_model = None
 
 try:
+
     if MODEL_PATH.exists():
-        ml_model = joblib.load(MODEL_PATH)
+
+        ml_model = joblib.load(
+            MODEL_PATH
+        )
+
         print(
             f"Successfully loaded model: {MODEL_PATH}"
         )
+
     else:
+
         print(
             f"Model not found: {MODEL_PATH}"
         )
 
 except Exception as e:
-    print(f"Error loading model: {e}")
+
+    print(
+        f"Error loading model: {e}"
+    )
 
 
 # =====================================
@@ -71,17 +83,20 @@ FEATURES = [
 # REQUEST MODELS
 # =====================================
 class SignupData(BaseModel):
+
     username: str
     email: str
     password: str
 
 
 class LoginData(BaseModel):
+
     username: str
     password: str
 
 
 class PredictData(BaseModel):
+
     duration: float
     src_bytes: float
     dst_bytes: float
@@ -91,20 +106,6 @@ class PredictData(BaseModel):
 # =====================================
 # HELPER FUNCTIONS
 # =====================================
-def dummy_predict(count: float) -> dict:
-
-    if count > 50:
-        return {
-            "label": "Attack",
-            "confidence": 0.85,
-        }
-
-    return {
-        "label": "Normal",
-        "confidence": 0.92,
-    }
-
-
 def get_threat_level(confidence: float):
 
     if confidence >= 0.85:
@@ -245,6 +246,13 @@ async def predict_batch(
     file: UploadFile = File(...)
 ):
 
+    if ml_model is None:
+
+        raise HTTPException(
+            status_code=500,
+            detail="ML model not loaded."
+        )
+
     if (
         not file.filename
         or
@@ -271,6 +279,9 @@ async def predict_batch(
             detail="Could not read CSV file.",
         )
 
+    # =====================================
+    # VALIDATE REQUIRED FEATURES
+    # =====================================
     missing = [
         col for col in FEATURES
         if col not in df.columns
@@ -283,38 +294,81 @@ async def predict_batch(
             detail=f"CSV missing columns: {', '.join(missing)}",
         )
 
-    results = []
+    try:
 
-    normal_count = 0
+        # =====================================
+        # EXTRACT MODEL FEATURES
+        # =====================================
+        input_df = df[FEATURES]
 
-    attack_count = 0
-
-    for index, row in df.iterrows():
-
-        prediction = dummy_predict(
-            float(row["count"])
+        # =====================================
+        # BULK ML PREDICTION
+        # =====================================
+        predictions = ml_model.predict(
+            input_df
         )
 
-        label = prediction["label"]
+        probabilities = (
+            ml_model.predict_proba(
+                input_df
+            )
+        )
 
-        confidence = prediction["confidence"]
+        results = []
 
-        if label == "Normal":
-            normal_count += 1
-        else:
-            attack_count += 1
+        normal_count = 0
+        attack_count = 0
 
-        results.append({
-            "row": int(index) + 1,
-            "label": label,
-            "confidence": confidence,
-        })
+        # =====================================
+        # FORMAT RESULTS
+        # =====================================
+        for index in range(len(df)):
 
-    return {
-        "filename": file.filename,
-        "total_rows": len(results),
-        "columns": len(FEATURES),
-        "normal_count": normal_count,
-        "attack_count": attack_count,
-        "results": results,
-    }
+            pred_class = predictions[index]
+
+            probs = probabilities[index]
+
+            if pred_class == 1:
+
+                label = "Attack"
+
+                confidence = float(
+                    probs[1]
+                )
+
+                attack_count += 1
+
+            else:
+
+                label = "Normal"
+
+                confidence = float(
+                    probs[0]
+                )
+
+                normal_count += 1
+
+            results.append({
+                "row": int(index) + 1,
+                "label": label,
+                "confidence": round(
+                    confidence,
+                    4
+                ),
+            })
+
+        return {
+            "filename": file.filename,
+            "total_rows": len(results),
+            "columns": len(FEATURES),
+            "normal_count": normal_count,
+            "attack_count": attack_count,
+            "results": results,
+        }
+
+    except Exception as e:
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Batch prediction failed: {str(e)}"
+        )
