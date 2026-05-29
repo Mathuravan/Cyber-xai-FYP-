@@ -1,4 +1,4 @@
-import { API_BASE } from "./authService"
+import { API_BASE, getToken } from "./authService"
 
 
 // =====================================
@@ -60,6 +60,11 @@ export const predictSingle = async (
   features
 ) => {
 
+  const token = getToken()
+  if (!token) {
+    throw new Error("Authentication required")
+  }
+
   const res = await fetch(
     `${API_BASE}/predict`,
     {
@@ -67,6 +72,7 @@ export const predictSingle = async (
       headers: {
         "Content-Type":
           "application/json",
+        "Authorization": `Bearer ${token}`,
       },
       body: JSON.stringify(features),
     }
@@ -92,6 +98,11 @@ export const predictBatch = async (
   file
 ) => {
 
+  const token = getToken()
+  if (!token) {
+    throw new Error("Authentication required")
+  }
+
   const formData = new FormData()
 
   formData.append("file", file)
@@ -100,6 +111,9 @@ export const predictBatch = async (
     `${API_BASE}/predict/batch`,
     {
       method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
       body: formData,
     }
   )

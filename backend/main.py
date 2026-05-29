@@ -3,6 +3,7 @@ from fastapi import (
     File,
     HTTPException,
     UploadFile,
+    Header,
 )
 
 from fastapi.middleware.cors import (
@@ -197,6 +198,42 @@ def create_access_token(
     return encoded_jwt
 
 # =====================================
+# VERIFY JWT TOKEN
+# =====================================
+def verify_token(authorization: str) -> str:
+    if not authorization:
+        raise HTTPException(
+            status_code=401,
+            detail="Missing authorization token",
+        )
+    
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid token format",
+        )
+    
+    token = authorization.split("Bearer ")[1]
+    
+    try:
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM],
+        )
+        return payload.get("sub")
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=401,
+            detail="Token has expired",
+        )
+    except jwt.InvalidTokenError:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid token",
+        )
+
+# =====================================
 # THREAT LEVEL
 # =====================================
 def get_threat_level(
@@ -327,7 +364,12 @@ def login(data: LoginData):
 # SINGLE PREDICTION
 # =====================================
 @app.post("/predict")
-def predict(data: PredictData):
+def predict(
+    data: PredictData,
+    authorization: str = Header(None)
+):
+
+    username = verify_token(authorization)
 
     if ml_model is None:
 
@@ -419,8 +461,11 @@ def predict(data: PredictData):
 # =====================================
 @app.post("/predict/batch")
 async def predict_batch(
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
+    authorization: str = Header(None)
 ):
+
+    username = verify_token(authorization)
 
     if ml_model is None:
 
