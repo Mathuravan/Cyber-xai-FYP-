@@ -104,25 +104,90 @@ export const clearAttackLogs = () => {
 };
 
 // =======================
-// ANALYTICS HELPERS
+// PREDICTION HISTORY
 // =======================
-export const getTotalPredictions = () => {
-  return getAttackLogs().length;
+
+const HISTORY_KEY =
+  "cyberxai_prediction_history";
+
+export const getPredictionHistory = () => {
+  try {
+    return JSON.parse(
+      localStorage.getItem(
+        HISTORY_KEY
+      ) || "[]"
+    );
+  } catch {
+    return [];
+  }
 };
 
+export const savePredictionHistory = (
+  prediction
+) => {
+  const history =
+    getPredictionHistory();
+
+  history.unshift(prediction);
+
+  localStorage.setItem(
+    HISTORY_KEY,
+    JSON.stringify(history)
+  );
+};
+
+export const clearPredictionHistory =
+  () => {
+    localStorage.setItem(
+      HISTORY_KEY,
+      JSON.stringify([])
+    );
+  };
+
+// =======================
+// ANALYTICS HELPERS
+// =======================
+
+export const getTotalPredictions =
+  () => {
+    return getPredictionHistory()
+      .length;
+  };
+
 export const getAttackCount = () => {
-  const logs = getAttackLogs();
-  return logs.filter(log => log.label && log.label.toLowerCase() !== "normal").length;
+  const history =
+    getPredictionHistory();
+
+  return history.filter(
+    (item) =>
+      item.label &&
+      item.label.toLowerCase() ===
+        "attack"
+  ).length;
 };
 
 export const getNormalCount = () => {
-  const logs = getAttackLogs();
-  return logs.filter(log => log.label && log.label.toLowerCase() === "normal").length;
+  const history =
+    getPredictionHistory();
+
+  return history.filter(
+    (item) =>
+      item.label &&
+      item.label.toLowerCase() ===
+        "normal"
+  ).length;
 };
 
 export const getAttackRate = () => {
-  const total = getTotalPredictions();
-  if (total === 0) return 0;
-  const attacks = getAttackCount();
-  return ((attacks / total) * 100).toFixed(1);
+  const total =
+    getTotalPredictions();
+
+  if (total === 0) {
+    return 0;
+  }
+
+  return (
+    (getAttackCount() / total) *
+    100
+  ).toFixed(1);
 };

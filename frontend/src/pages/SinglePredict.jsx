@@ -3,6 +3,7 @@ import { predictSingle } from "../services/predictionService"
 import {
   saveLatestPrediction,
   addAttackLog,
+  savePredictionHistory,
 } from "../services/storageService"
 
 const FEATURES = [
@@ -131,7 +132,16 @@ export default function SinglePredict() {
       }
 
       saveLatestPrediction(logEntry)
+      
+      if (data.label === "Attack") {
       addAttackLog(logEntry)
+      }
+
+      savePredictionHistory({
+        label: data.label,
+        confidence: data.confidence,
+        timestamp,
+      })
     } catch (err) {
       setError(
         err.message ||

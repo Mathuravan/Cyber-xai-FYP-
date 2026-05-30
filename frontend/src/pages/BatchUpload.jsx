@@ -4,6 +4,7 @@ import { predictBatch } from "../services/predictionService";
 import {
   saveCsvSummary,
   addMultipleAttackLogs,
+  savePredictionHistory,
 } from "../services/storageService";
 
 export default function BatchUpload() {
@@ -51,6 +52,16 @@ export default function BatchUpload() {
       const data = await predictBatch(file);
 
       setSummary(data);
+
+      data.results.forEach(
+        (result) => {
+          savePredictionHistory({
+            label: result.label,
+            confidence: result.confidence,
+            timestamp: new Date().toLocaleString(),
+          });
+        }
+      );
 
       // =======================
       // SAVE CSV SUMMARY
