@@ -102,3 +102,27 @@ export const clearAttackLogs = () => {
     JSON.stringify([])
   );
 };
+
+// =======================
+// ANALYTICS HELPERS
+// =======================
+export const getTotalPredictions = () => {
+  return getAttackLogs().length;
+};
+
+export const getAttackCount = () => {
+  const logs = getAttackLogs();
+  return logs.filter(log => log.label && log.label.toLowerCase() !== "normal").length;
+};
+
+export const getNormalCount = () => {
+  const logs = getAttackLogs();
+  return logs.filter(log => log.label && log.label.toLowerCase() === "normal").length;
+};
+
+export const getAttackRate = () => {
+  const total = getTotalPredictions();
+  if (total === 0) return 0;
+  const attacks = getAttackCount();
+  return ((attacks / total) * 100).toFixed(1);
+};

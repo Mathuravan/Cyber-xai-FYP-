@@ -7,6 +7,10 @@ import { checkHealth } from "../services/predictionService"
 import {
   getLatestPrediction,
   getCsvSummary,
+  getTotalPredictions,
+  getAttackCount,
+  getNormalCount,
+  getAttackRate,
 } from "../services/storageService"
 
 import SystemStatusCard from "../components/dashboard/SystemStatusCard"
@@ -18,6 +22,12 @@ export default function DashboardHome() {
 
   const latestPrediction = getLatestPrediction()
   const csvSummary = getCsvSummary()
+  
+  // Analytics data
+  const totalPredictions = getTotalPredictions()
+  const attackCount = getAttackCount()
+  const normalCount = getNormalCount()
+  const attackRate = getAttackRate()
 
   useEffect(() => {
     checkHealth()
@@ -38,6 +48,29 @@ export default function DashboardHome() {
           NSL-KDD intrusion detection using
           duration, src_bytes, dst_bytes, and count.
         </p>
+      </div>
+
+      {/* Analytics Summary Section */}
+      <div className="panel dashboard-panel" style={{ marginBottom: '20px' }}>
+        <h2 className="page-title">Attack Analytics</h2>
+        <div className="summary-cards">
+          <div className="card">
+            <h3>Total Predictions</h3>
+            <p className="card-value">{totalPredictions}</p>
+          </div>
+          <div className="card attack">
+            <h3>Total Attacks</h3>
+            <p className="card-value">{attackCount}</p>
+          </div>
+          <div className="card normal">
+            <h3>Normal Traffic</h3>
+            <p className="card-value">{normalCount}</p>
+          </div>
+          <div className="card">
+            <h3>Attack Rate</h3>
+            <p className="card-value">{attackRate}%</p>
+          </div>
+        </div>
       </div>
 
       <div className="cards">
