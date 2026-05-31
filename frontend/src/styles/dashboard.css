@@ -413,3 +413,72 @@
   border: 1px dashed
     rgba(255, 255, 255, 0.1);
 }
+
+/* =======================
+   XAI EXPLANATION BOX
+======================= */
+
+.explanation-box {
+  background: rgba(15, 23, 42, 0.95);
+  border-radius: 14px;
+  padding: 22px;
+  margin-top: 24px;
+  transition: all 0.3s ease;
+}
+
+.explanation-box.attack-glow {
+  border: 1px solid rgba(255, 87, 87, 0.5);
+  box-shadow: 0 0 15px rgba(255, 87, 87, 0.15);
+}
+
+.explanation-box.normal-glow {
+  border: 1px solid rgba(16, 185, 129, 0.5);
+}
+
+.explanation-box h3 {
+  color: #e2e8f0;
+  font-size: 20px;
+  margin-bottom: 16px;
+  margin-top: 0;
+}
+
+.explanation-box p {
+  color: #cbd5e1;
+  font-size: 16px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.explanation-box strong {
+  color: #e2e8f0;
+}
+
+.risk-factors {
+  margin: 16px 0;
+}
+
+.risk-factors strong {
+  color: #e2e8f0;
+  font-size: 16px;
+}
+
+.risk-factors ul {
+  margin: 8px 0 0 0;
+  padding-left: 24px;
+  color: #cbd5e1;
+}
+
+.risk-factors li {
+  margin-bottom: 8px;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.recommendation {
+  margin-top: 16px !important;
+  color: #e2e8f0 !important;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 12px;
+  border-radius: 8px;
+}

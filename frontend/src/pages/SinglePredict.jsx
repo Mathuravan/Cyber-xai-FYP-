@@ -57,6 +57,45 @@ function getThreatLevel(label, confidence) {
   }
 }
 
+function generateThreatExplanation(features, label, confidence) {
+  if (label === "Normal") {
+    return {
+      summary: "Traffic appears benign and matches normal network baselines.",
+      riskFactors: [
+        "Traffic behavior matches expected NSL-KDD baseline patterns.",
+        "No suspicious repeated connections or abnormal traffic spikes detected.",
+      ],
+      recommendation: "No action required. Continue monitoring."
+    };
+  }
+
+  const riskFactors = [];
+  
+  if (features.count > 50 && features.duration < 2) {
+    riskFactors.push("Very low duration with a high connection count indicates a possible port scanning attack.");
+  } else if (features.count > 50) {
+    riskFactors.push("High connection count suggests suspicious repeated connections or a potential DOS attempt.");
+  }
+
+  if (features.src_bytes > 10000) {
+    riskFactors.push("High source bytes transferred indicates unusual outbound traffic or possible data exfiltration.");
+  }
+
+  if (confidence >= 0.8) {
+    riskFactors.push("High confidence attack prediction signifies a severe intrusion risk.");
+  }
+
+  if (riskFactors.length === 0) {
+    riskFactors.push("The AI model detected anomalous feature patterns typical of malicious behavior.");
+  }
+
+  return {
+    summary: "The AI model has flagged this traffic as a potential security threat.",
+    riskFactors,
+    recommendation: "Isolate the source IP immediately and investigate the associated endpoints."
+  };
+}
+
 export default function SinglePredict() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [loading, setLoading] = useState(false)
@@ -119,6 +158,7 @@ export default function SinglePredict() {
         threatLevel: threat.level,
         threatClass: threat.className,
         timestamp,
+        explanation: generateThreatExplanation(payload, data.label, data.confidence),
       }
 
       setResult(displayResult)
@@ -236,36 +276,78 @@ export default function SinglePredict() {
         )}
 
         {result && (
-          <div className="result-box predict-result">
-            <h3>Prediction Result</h3>
+          <>
+            <div className="result-box predict-result">
+              <h3>Prediction Result</h3>
 
-            <p>
-              <strong>Prediction:</strong>{" "}
-              <span
-                className={`prediction-label ${labelClass}`}
-              >
-                {result.label}
-              </span>
-            </p>
+              <p>
+                <strong>Prediction:</strong>{" "}
+                <span
+                  className={`prediction-label ${labelClass}`}
+                >
+                  {result.label}
+                </span>
+              </p>
 
-            <p>
-              <strong>Confidence:</strong>{" "}
-              {(result.confidence * 100).toFixed(1)}%
-            </p>
+              <p>
+                <strong>Confidence:</strong>{" "}
+                {(result.confidence * 100).toFixed(1)}%
+              </p>
 
-            <p>
-              <strong>Threat Level:</strong>{" "}
-              <span
-                className={`status-pill ${result.threatClass}`}
-              >
-                {result.threatLevel}
-              </span>
-            </p>
+              <p>
+                <strong>Threat Level:</strong>{" "}
+                <span
+                  className={`status-pill ${result.threatClass}`}
+                >
+                  {result.threatLevel}
+                </span>
+              </p>
 
-            <p className="card-meta">
-              Timestamp: {result.timestamp}
-            </p>
-          </div>
+              <p className="card-meta">
+                Timestamp: {result.timestamp}
+              </p>
+            </div>
+
+            <div
+              className={`explanation-box ${
+                result.label === "Attack"
+                  ? "attack-glow"
+                  : "normal-glow"
+              }`}
+            >
+              <h3>Threat Explanation (XAI)</h3>
+
+              <p>
+                <strong>Severity:</strong>{" "}
+                <span
+                  className={`badge ${
+                    result.label === "Attack"
+                      ? "attack"
+                      : "normal"
+                  }`}
+                >
+                  {result.threatLevel}
+                </span>
+              </p>
+              
+              <p>
+                <strong>Summary:</strong> {result.explanation.summary}
+              </p>
+              
+              <div className="risk-factors">
+                <strong>Risk Factors:</strong>
+                <ul>
+                  {result.explanation.riskFactors.map((factor, idx) => (
+                    <li key={idx}>{factor}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <p className="recommendation">
+                <strong>Recommendation:</strong> {result.explanation.recommendation}
+              </p>
+            </div>
+          </>
         )}
       </div>
     </div>
