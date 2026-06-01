@@ -36,6 +36,89 @@ const EMPTY_FORM = {
   count: "",
 }
 
+const SHAP_FEATURE_LABELS = {
+  duration: "Duration",
+  src_bytes: "Source bytes",
+  dst_bytes: "Destination bytes",
+  count: "Count",
+}
+
+const SHAP_TOOLTIPS = {
+  duration:
+    "Very short flows can indicate scanning or rapid connection attempts.",
+  src_bytes:
+    "High source bytes may suggest unusual outbound or exfiltration activity.",
+  dst_bytes:
+    "Elevated destination bytes can reflect heavy inbound transfer patterns.",
+  count:
+    "High connection counts often correlate with floods or repeated probes.",
+}
+
+function getImpactLevel(absValue) {
+  if (absValue >= 0.5) {
+    return {
+      label: "High Impact",
+      className: "high",
+    }
+  }
+
+  if (absValue >= 0.25) {
+    return {
+      label: "Medium Impact",
+      className: "medium",
+    }
+  }
+
+  return {
+    label: "Low Impact",
+    className: "low",
+  }
+}
+
+function formatShapValues(shapValues) {
+  if (!shapValues || typeof shapValues !== "object") {
+    return []
+  }
+
+  const entries = Object.entries(shapValues).map(([name, rawValue]) => {
+    const value = Number(rawValue)
+    const absValue = Math.abs(value)
+    const impact = getImpactLevel(absValue)
+
+    return {
+      name,
+      label: SHAP_FEATURE_LABELS[name] || name,
+      value,
+      absValue,
+      direction: value >= 0 ? "suspicious" : "safe",
+      impactLabel: impact.label,
+      impactClass: impact.className,
+      tooltip: SHAP_TOOLTIPS[name] || "Feature contribution toward the prediction.",
+    }
+  })
+
+  const maxAbs = Math.max(...entries.map((item) => item.absValue), 0.01)
+
+  return entries.map((item) => ({
+    ...item,
+    barWidth: Math.round((item.absValue / maxAbs) * 100),
+  }))
+}
+
+function getTopSuspiciousFeature(formattedShap) {
+  if (!formattedShap.length) {
+    return null
+  }
+
+  return formattedShap.reduce((top, item) => {
+    if (!top || item.value > top.value) {
+      return item
+    }
+
+    return top
+  }, null)
+}
+
 function getThreatLevel(label, confidence) {
   if (label === "Normal") {
     return {
@@ -152,6 +235,9 @@ export default function SinglePredict() {
 
       const timestamp = new Date().toLocaleString()
 
+      const shapContributions = formatShapValues(data.shap_values)
+      const topSuspicious = getTopSuspiciousFeature(shapContributions)
+
       const displayResult = {
         label: data.label,
         confidence: data.confidence,
@@ -159,6 +245,8 @@ export default function SinglePredict() {
         threatClass: threat.className,
         timestamp,
         explanation: generateThreatExplanation(payload, data.label, data.confidence),
+        shapContributions,
+        topSuspicious,
       }
 
       setResult(displayResult)
@@ -347,6 +435,66 @@ export default function SinglePredict() {
                 <strong>Recommendation:</strong> {result.explanation.recommendation}
               </p>
             </div>
+
+            {result.shapContributions?.length > 0 && (
+              <div className="shap-panel">
+                <h3>Feature Contribution Analysis</h3>
+                <p className="shap-panel-subtitle">
+                  SHAP-style scores show how each NSL-KDD feature pushed the
+                  prediction toward attack (positive) or normal traffic (negative).
+                </p>
+
+                {result.topSuspicious && result.topSuspicious.value > 0 && (
+                  <div className="shap-top-feature">
+                    <strong>Most suspicious:</strong>
+                    <span>{result.topSuspicious.label}</span>
+                    <span>({result.topSuspicious.value.toFixed(2)})</span>
+                  </div>
+                )}
+
+                <div className="shap-feature-list">
+                  {result.shapContributions.map((feature) => (
+                    <div
+                      key={feature.name}
+                      className={`shap-feature-row ${
+                        result.topSuspicious?.name === feature.name &&
+                        feature.value > 0
+                          ? "top-suspicious"
+                          : ""
+                      }`}
+                    >
+                      <div className="shap-feature-header">
+                        <span className="shap-feature-name">
+                          {feature.label}
+                        </span>
+
+                        <div className="shap-feature-meta">
+                          <span className="shap-score">
+                            {feature.value >= 0 ? "+" : ""}
+                            {feature.value.toFixed(2)}
+                          </span>
+                          <span
+                            className={`shap-impact-label ${feature.impactClass}`}
+                          >
+                            {feature.impactLabel}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="shap-bar-track">
+                        <div
+                          className={`shap-bar-fill ${feature.direction}`}
+                          style={{ width: `${feature.barWidth}%` }}
+                          title={`${feature.label}: ${feature.value.toFixed(2)}`}
+                        />
+                      </div>
+
+                      <p className="shap-tooltip">{feature.tooltip}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>

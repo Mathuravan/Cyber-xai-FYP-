@@ -249,6 +249,64 @@ def get_threat_level(
     return "Low"
 
 # =====================================
+# SHAP-STYLE FEATURE CONTRIBUTIONS
+# (lightweight heuristic scores for UI)
+# =====================================
+def compute_shap_values(
+    duration: float,
+    src_bytes: float,
+    dst_bytes: float,
+    count: float,
+) -> dict:
+
+    # Short-lived flows often correlate with scans / floods
+    if duration < 2:
+        duration_score = 0.35
+    elif duration < 10:
+        duration_score = 0.08
+    else:
+        duration_score = -0.12
+
+    # High outbound bytes can indicate exfiltration
+    if src_bytes > 10000:
+        src_score = 0.55
+    elif src_bytes > 5000:
+        src_score = 0.44
+    elif src_bytes > 2000:
+        src_score = 0.18
+    else:
+        src_score = -0.10
+
+    # Elevated destination bytes add moderate risk
+    if dst_bytes > 8000:
+        dst_score = 0.28
+    elif dst_bytes > 4000:
+        dst_score = 0.18
+    elif dst_bytes > 1500:
+        dst_score = 0.06
+    else:
+        dst_score = -0.06
+
+    # High connection counts are strongly suspicious
+    if count > 80:
+        count_score = 0.85
+    elif count > 50:
+        count_score = 0.71
+    elif count > 30:
+        count_score = 0.45
+    elif count > 15:
+        count_score = 0.20
+    else:
+        count_score = -0.15
+
+    return {
+        "duration": round(duration_score, 2),
+        "src_bytes": round(src_score, 2),
+        "dst_bytes": round(dst_score, 2),
+        "count": round(count_score, 2),
+    }
+
+# =====================================
 # HOME
 # =====================================
 @app.get("/")
@@ -433,6 +491,13 @@ def predict(
 
             threat_level = "Safe"
 
+        shap_values = compute_shap_values(
+            data.duration,
+            data.src_bytes,
+            data.dst_bytes,
+            data.count,
+        )
+
         return {
             "label":
             label,
@@ -445,6 +510,9 @@ def predict(
 
             "threat_level":
             threat_level,
+
+            "shap_values":
+            shap_values,
         }
 
     except Exception as e:
