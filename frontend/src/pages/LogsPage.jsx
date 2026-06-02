@@ -12,6 +12,8 @@ const FILTER_OPTIONS = [
   { value: "high_confidence", label: "High Confidence (>80%)" },
 ]
 
+const EXPORT_FILENAME = "cyberxai_threat_report.csv"
+
 function getSeverity(confidence) {
   const value = Number(confidence) || 0
 
@@ -95,10 +97,138 @@ function getLogAnalytics(logs) {
   }
 }
 
+function generateThreatReport(logs) {
+  if (!logs.length) {
+    return null
+  }
+
+  const attackLogs = logs.filter(
+    (log) =>
+      log.label &&
+      log.label.toLowerCase() === "attack"
+  )
+
+  const confidences = logs.map(
+    (log) => Number(log.confidence) || 0
+  )
+
+  const averageConfidence =
+    confidences.reduce((sum, value) => sum + value, 0) /
+    confidences.length
+
+  const highestConfidenceThreat = logs.reduce((top, log) => {
+    if (!top) return log
+    return Number(log.confidence) > Number(top.confidence)
+      ? log
+      : top
+  }, null)
+
+  const severityCounts = {}
+
+  logs.forEach((log) => {
+    const severityLabel = getSeverity(log.confidence).label
+    severityCounts[severityLabel] =
+      (severityCounts[severityLabel] || 0) + 1
+  })
+
+  const mostCommonSeverity = Object.entries(severityCounts).sort(
+    (a, b) => b[1] - a[1]
+  )[0]?.[0]
+
+  return {
+    totalAttacks: attackLogs.length,
+    highestConfidenceThreat,
+    averageConfidence,
+    mostCommonSeverity: mostCommonSeverity || "N/A",
+    generatedAt: new Date().toLocaleString(),
+  }
+}
+
+function escapeCsvCell(value) {
+  const text = String(value ?? "")
+
+  if (
+    text.includes(",") ||
+    text.includes('"') ||
+    text.includes("\n")
+  ) {
+    return `"${text.replace(/"/g, '""')}"`
+  }
+
+  return text
+}
+
+function exportLogsToCSV(logs) {
+  if (!logs.length) {
+    return false
+  }
+
+  const report = generateThreatReport(logs)
+  const generatedAt = new Date().toLocaleString()
+
+  const summaryRows = [
+    ["CyberXAI Threat Report"],
+    ["Generated At", generatedAt],
+    ["Total Attacks", report.totalAttacks],
+    [
+      "Average Confidence %",
+      (report.averageConfidence * 100).toFixed(1),
+    ],
+    [
+      "Highest Confidence %",
+      (
+        Number(report.highestConfidenceThreat.confidence) * 100
+      ).toFixed(1),
+    ],
+    ["Most Common Severity", report.mostCommonSeverity],
+    [],
+    [
+      "timestamp",
+      "label",
+      "confidence",
+      "severity",
+      "source",
+    ],
+  ]
+
+  const dataRows = logs.map((log) => {
+    const severity = getSeverity(log.confidence)
+
+    return [
+      log.timestamp,
+      log.label,
+      `${(Number(log.confidence) * 100).toFixed(1)}%`,
+      severity.label,
+      log.source,
+    ]
+  })
+
+  const csvContent = [...summaryRows, ...dataRows]
+    .map((row) => row.map(escapeCsvCell).join(","))
+    .join("\n")
+
+  const blob = new Blob([csvContent], {
+    type: "text/csv;charset=utf-8;",
+  })
+
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement("a")
+  link.href = url
+  link.download = EXPORT_FILENAME
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+
+  return true
+}
+
 export default function LogsPage() {
   const [logs, setLogs] = useState([])
   const [searchQuery, setSearchQuery] = useState("")
   const [filterType, setFilterType] = useState("all")
+  const [exportMessage, setExportMessage] = useState("")
+  const [exportError, setExportError] = useState("")
 
   useEffect(() => {
     setLogs(getAttackLogs())
@@ -106,6 +236,7 @@ export default function LogsPage() {
 
   const filteredLogs = filterLogs(logs, searchQuery, filterType)
   const analytics = getLogAnalytics(filteredLogs)
+  const threatReport = generateThreatReport(filteredLogs)
 
   const latestAttack =
     logs.length > 0 ? logs[0].timestamp : "No logs"
@@ -124,10 +255,41 @@ export default function LogsPage() {
     setLogs([])
     setSearchQuery("")
     setFilterType("all")
+    setExportMessage("")
+    setExportError("")
   }
 
   const handleClearSearch = () => {
     setSearchQuery("")
+  }
+
+  const handleExportCsv = () => {
+    setExportMessage("")
+    setExportError("")
+
+    if (logs.length === 0) {
+      setExportError(
+        "No logs available to export. Run a prediction first."
+      )
+      return
+    }
+
+    if (filteredLogs.length === 0) {
+      setExportError(
+        "No logs match your current filters. Adjust search or filters to export."
+      )
+      return
+    }
+
+    const success = exportLogsToCSV(filteredLogs)
+
+    if (success) {
+      setExportMessage(
+        `Report exported successfully as ${EXPORT_FILENAME}`
+      )
+    } else {
+      setExportError("Export failed. Please try again.")
+    }
   }
 
   return (
@@ -136,21 +298,40 @@ export default function LogsPage() {
         <div>
           <h1>Attack Logs</h1>
           <p>
-            Search, filter, and analyze saved intrusion
+            Search, filter, analyze, and export intrusion
             detection history.
           </p>
         </div>
 
-        {logs.length > 0 && (
+        <div className="logs-header-actions">
           <button
             type="button"
-            className="btn-danger"
-            onClick={handleClearLogs}
+            className="btn logs-export-btn"
+            onClick={handleExportCsv}
+            disabled={logs.length === 0}
           >
-            Clear Logs
+            Export CSV
           </button>
-        )}
+
+          {logs.length > 0 && (
+            <button
+              type="button"
+              className="btn-danger"
+              onClick={handleClearLogs}
+            >
+              Clear Logs
+            </button>
+          )}
+        </div>
       </div>
+
+      {exportMessage && (
+        <p className="logs-export-success">{exportMessage}</p>
+      )}
+
+      {exportError && (
+        <p className="logs-export-error">{exportError}</p>
+      )}
 
       <div className="summary-cards logs-summary logs-analytics">
         <div className="card">
@@ -174,11 +355,60 @@ export default function LogsPage() {
         </div>
       </div>
 
+      {threatReport && (
+        <div className="panel dashboard-panel threat-report-panel">
+          <h2 className="page-title">Threat Report Summary</h2>
+          <p className="page-subtitle">
+            Live statistics for the currently filtered log view.
+            Generated {threatReport.generatedAt}
+          </p>
+
+          <div className="summary-cards threat-report-cards">
+            <div className="card warning">
+              <h3>Total Attacks</h3>
+              <p className="card-value attack">
+                {threatReport.totalAttacks}
+              </p>
+            </div>
+
+            <div className="card critical-card">
+              <h3>Highest Confidence Threat</h3>
+              <p className="card-value attack">
+                {(
+                  Number(
+                    threatReport.highestConfidenceThreat.confidence
+                  ) * 100
+                ).toFixed(1)}
+                %
+              </p>
+              <p className="report-meta">
+                {threatReport.highestConfidenceThreat.label} ·{" "}
+                {threatReport.highestConfidenceThreat.source}
+              </p>
+            </div>
+
+            <div className="card">
+              <h3>Average Confidence</h3>
+              <p className="card-value">
+                {(threatReport.averageConfidence * 100).toFixed(1)}%
+              </p>
+            </div>
+
+            <div className="card">
+              <h3>Most Common Severity</h3>
+              <p className="card-value">
+                {threatReport.mostCommonSeverity}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="panel dashboard-panel logs-controls-panel">
         <h2 className="page-title">Threat Log Controls</h2>
         <p className="page-subtitle">
-          Search by label, timestamp, or source. Filter by threat type
-          or confidence.
+          Search by label, timestamp, or source. Export downloads
+          filtered logs only.
         </p>
 
         <div className="logs-toolbar">

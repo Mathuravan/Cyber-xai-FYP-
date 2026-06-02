@@ -430,6 +430,72 @@
   box-shadow: 0 0 14px rgba(220, 38, 38, 0.12);
 }
 
+.logs-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.logs-export-btn {
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.9),
+    rgba(79, 70, 229, 0.95)
+  );
+  border: 1px solid rgba(129, 140, 248, 0.5);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.logs-export-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
+}
+
+.logs-export-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.logs-export-success {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  color: #bbf7d0;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  font-size: 14px;
+}
+
+.logs-export-error {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  color: #fecaca;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  font-size: 14px;
+}
+
+.threat-report-panel {
+  margin-bottom: 20px;
+}
+
+.threat-report-cards {
+  margin-top: 16px;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(200px, 1fr)
+  );
+}
+
+.threat-report-panel .report-meta {
+  margin-top: 10px;
+  color: #94a3b8;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
 .logs-controls-panel {
   margin-bottom: 20px;
 }
