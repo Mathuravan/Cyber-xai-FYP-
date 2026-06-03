@@ -871,3 +871,307 @@
     align-items: flex-start;
   }
 }
+
+/* =======================
+   LIVE MONITORING DASHBOARD
+======================= */
+
+.monitoring-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.monitoring-topbar-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.system-online-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #bbf7d0;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.2);
+}
+
+.live-clock {
+  color: #94a3b8;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.live-monitoring-panel {
+  margin-bottom: 20px;
+  border: 1px solid rgba(0, 207, 255, 0.2);
+  box-shadow: 0 0 24px rgba(0, 207, 255, 0.08);
+}
+
+.live-monitoring-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.live-indicator-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.live-indicator.healthy-pulse {
+  color: #bbf7d0;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+}
+
+.live-indicator.healthy-pulse .live-indicator-dot {
+  background: #22c55e;
+  animation: pulse-green 1.8s ease-in-out infinite;
+}
+
+.live-indicator.alert-pulse {
+  color: #fecaca;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.live-indicator.alert-pulse .live-indicator-dot {
+  background: #ef4444;
+  animation: pulse-red 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse-green {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6);
+    transform: scale(1);
+  }
+
+  50% {
+    box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+    transform: scale(1.1);
+  }
+}
+
+@keyframes pulse-red {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    transform: scale(1);
+  }
+
+  50% {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+    transform: scale(1.15);
+  }
+}
+
+.monitoring-widgets-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(220px, 1fr)
+  );
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.monitor-card {
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(0, 207, 255, 0.2);
+  border-radius: 12px;
+  padding: 18px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.monitor-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(0, 207, 255, 0.45);
+  box-shadow: 0 8px 20px rgba(0, 207, 255, 0.12);
+}
+
+.monitor-card h3 {
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.monitor-value {
+  color: #e2e8f0;
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.monitor-value.monitor-value-sm {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.monitor-value.attack {
+  color: #ff5757;
+}
+
+.monitor-meta {
+  margin: 10px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.live-status-card.secure {
+  border-color: rgba(34, 197, 94, 0.4);
+  box-shadow: 0 0 14px rgba(34, 197, 94, 0.1);
+}
+
+.live-status-card.watch {
+  border-color: rgba(245, 158, 11, 0.45);
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.12);
+}
+
+.live-status-card.alert {
+  border-color: rgba(239, 68, 68, 0.5);
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.18);
+  animation: alert-border-glow 2s ease-in-out infinite;
+}
+
+@keyframes alert-border-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.15);
+  }
+
+  50% {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.35);
+  }
+}
+
+.severity-overview-title {
+  color: #e2e8f0;
+  font-size: 16px;
+  margin: 0 0 12px;
+}
+
+.severity-overview-cards {
+  margin-bottom: 0;
+}
+
+.monitor-severity-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.monitor-severity-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 207, 255, 0.1);
+}
+
+.live-activity-panel {
+  margin-bottom: 20px;
+}
+
+.live-activity-empty {
+  margin-top: 12px;
+}
+
+.live-activity-list {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.live-activity-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.live-activity-item:hover {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.25);
+}
+
+.live-activity-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.live-activity-time {
+  color: #e2e8f0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.live-activity-source {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.live-activity-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.live-activity-confidence {
+  color: #cbd5e1;
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 768px) {
+  .monitoring-topbar-meta {
+    align-items: flex-start;
+  }
+
+  .monitoring-widgets-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .live-activity-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

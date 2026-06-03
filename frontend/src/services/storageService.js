@@ -191,3 +191,115 @@ export const getAttackRate = () => {
     100
   ).toFixed(1);
 };
+
+// =======================
+// THREAT SEVERITY HELPERS
+// =======================
+
+const UPTIME_KEY = "cyberxai_session_start";
+
+function getThreatSeverityLevel(confidence) {
+  const value = Number(confidence) || 0;
+
+  if (value >= 0.9) {
+    return "critical";
+  }
+
+  if (value >= 0.75) {
+    return "high";
+  }
+
+  if (value >= 0.5) {
+    return "medium";
+  }
+
+  return "low";
+}
+
+function countThreatsBySeverity(severityLevel) {
+  return getAttackLogs().filter(
+    (log) =>
+      getThreatSeverityLevel(log.confidence) ===
+      severityLevel
+  ).length;
+}
+
+export const getCriticalThreatCount = () =>
+  countThreatsBySeverity("critical");
+
+export const getHighThreatCount = () =>
+  countThreatsBySeverity("high");
+
+export const getMediumThreatCount = () =>
+  countThreatsBySeverity("medium");
+
+export const getLowThreatCount = () =>
+  countThreatsBySeverity("low");
+
+export const getLatestThreat = () => {
+  const logs = getAttackLogs();
+
+  if (!logs.length) {
+    return null;
+  }
+
+  return logs[0];
+};
+
+export const getActiveThreatCount = () =>
+  getAttackLogs().length;
+
+export const getRecentThreats = (limit = 5) => {
+  return getAttackLogs().slice(0, limit);
+};
+
+export const getDetectionAccuracy = () => {
+  const history = getPredictionHistory();
+
+  if (!history.length) {
+    return "100.0";
+  }
+
+  const averageConfidence =
+    history.reduce(
+      (sum, item) =>
+        sum + (Number(item.confidence) || 0),
+      0
+    ) / history.length;
+
+  return (averageConfidence * 100).toFixed(1);
+};
+
+export const getSystemUptime = () => {
+  let startTime = localStorage.getItem(UPTIME_KEY);
+
+  if (!startTime) {
+    startTime = String(Date.now());
+    localStorage.setItem(UPTIME_KEY, startTime);
+  }
+
+  const elapsedMs = Date.now() - Number(startTime);
+  const totalSeconds = Math.floor(elapsedMs / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m ${seconds}s`;
+  }
+
+  if (minutes > 0) {
+    return `${minutes}m ${seconds}s`;
+  }
+
+  return `${seconds}s`;
+};
+
+export const getThreatSeverityLabel = (confidence) => {
+  const level = getThreatSeverityLevel(confidence);
+
+  if (level === "critical") return "Critical";
+  if (level === "high") return "High";
+  if (level === "medium") return "Medium";
+  return "Low";
+};
