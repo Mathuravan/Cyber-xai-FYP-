@@ -56,6 +56,190 @@ function getSeverityClassName(confidence) {
   return label
 }
 
+function generateSecurityRecommendations({
+  attackRate,
+  criticalThreatCount,
+  latestThreat,
+  detectionAccuracy,
+  recentThreats,
+  activeThreats,
+  highThreatCount,
+}) {
+  const rate = Number(attackRate) || 0
+  const accuracy = Number(detectionAccuracy) || 0
+  const recentCount = recentThreats?.length || 0
+  const latestSeverity = latestThreat
+    ? getThreatSeverityLabel(latestThreat.confidence)
+    : null
+
+  const recommendations = []
+  const checklist = []
+
+  if (criticalThreatCount > 0) {
+    recommendations.push({
+      id: "isolate-endpoints",
+      level: "critical",
+      priority: "P1",
+      title: "Isolate suspicious endpoints",
+      description:
+        "Critical threats detected. Immediately isolate affected hosts and review network segmentation.",
+    })
+    checklist.push("Quarantine endpoints linked to critical alerts")
+    checklist.push("Review firewall rules for blocked traffic patterns")
+  }
+
+  if (rate >= ATTACK_RATE_ALERT_THRESHOLD) {
+    recommendations.push({
+      id: "firewall-hardening",
+      level: "critical",
+      priority: "P1",
+      title: "Enable firewall hardening",
+      description:
+        "High attack rate detected. Tighten ingress/egress rules and enable rate limiting on edge devices.",
+    })
+    checklist.push("Enable strict firewall policies on perimeter gateways")
+  } else if (rate >= 20) {
+    recommendations.push({
+      id: "firewall-review",
+      level: "warning",
+      priority: "P2",
+      title: "Review firewall configuration",
+      description:
+        "Moderate attack rate observed. Audit current rules and close unused ports.",
+    })
+  }
+
+  if (accuracy > 0 && accuracy < 70) {
+    recommendations.push({
+      id: "retrain-model",
+      level: "warning",
+      priority: "P2",
+      title: "Retrain ML detection model",
+      description:
+        "Detection confidence is below optimal levels. Consider retraining with updated NSL-KDD samples.",
+    })
+    checklist.push("Schedule ML model retraining with recent traffic data")
+  }
+
+  if (recentCount >= 3 || activeThreats >= 5) {
+    recommendations.push({
+      id: "increase-monitoring",
+      level: "warning",
+      priority: "P2",
+      title: "Increase monitoring frequency",
+      description:
+        "Frequent attack activity detected. Enable real-time log analysis and shorten alert intervals.",
+    })
+    checklist.push("Reduce monitoring interval to near real-time")
+    checklist.push("Enable automated alert notifications for SOC team")
+  }
+
+  if (highThreatCount >= 2 && criticalThreatCount === 0) {
+    recommendations.push({
+      id: "threat-hunt",
+      level: "warning",
+      priority: "P3",
+      title: "Conduct proactive threat hunting",
+      description:
+        "Multiple high-severity events logged. Investigate lateral movement and anomalous traffic flows.",
+    })
+  }
+
+  if (
+    recommendations.length === 0 &&
+    rate < 10 &&
+    criticalThreatCount === 0 &&
+    activeThreats === 0
+  ) {
+    recommendations.push({
+      id: "maintain-defenses",
+      level: "stable",
+      priority: "P4",
+      title: "Maintain current defenses",
+      description:
+        "Environment appears stable. Continue routine monitoring and keep detection models updated.",
+    })
+    checklist.push("Continue scheduled vulnerability scans")
+    checklist.push("Review attack logs weekly for emerging patterns")
+  } else if (
+    recommendations.every((item) => item.level !== "stable") &&
+    rate < 15 &&
+    criticalThreatCount === 0
+  ) {
+    recommendations.push({
+      id: "maintain-baseline",
+      level: "stable",
+      priority: "P4",
+      title: "Maintain baseline security posture",
+      description:
+        "No critical alerts active. Keep current controls while addressing flagged recommendations.",
+    })
+  }
+
+  let posture = "Stable"
+  let postureClass = "stable"
+  let hasCriticalAlert = false
+
+  if (criticalThreatCount > 0 || rate >= ATTACK_RATE_ALERT_THRESHOLD) {
+    posture = "Critical Risk"
+    postureClass = "critical"
+    hasCriticalAlert = true
+  } else if (
+    rate >= 15 ||
+    highThreatCount >= 2 ||
+    recentCount >= 3 ||
+    (accuracy > 0 && accuracy < 70)
+  ) {
+    posture = "Elevated Warning"
+    postureClass = "warning"
+  }
+
+  let securityScore = 100
+  securityScore -= Math.min(rate, 50)
+  securityScore -= criticalThreatCount * 15
+  securityScore -= highThreatCount * 5
+  if (accuracy > 0 && accuracy < 70) securityScore -= 10
+  if (recentCount >= 3) securityScore -= 5
+  securityScore = Math.max(0, Math.min(100, Math.round(securityScore)))
+
+  let riskSummary = ""
+
+  if (hasCriticalAlert) {
+    riskSummary = `CyberXAI detected ${criticalThreatCount} critical threat(s) with an attack rate of ${rate}%. Immediate defensive action is recommended.`
+  } else if (postureClass === "warning") {
+    riskSummary = `Monitoring indicates elevated risk with ${activeThreats} active threat(s) and ${rate}% attack rate. Review priority recommendations below.`
+  } else if (activeThreats === 0) {
+    riskSummary =
+      "No active threats in local logs. Network posture is stable — maintain current monitoring and preventive controls."
+  } else {
+    riskSummary = `Low-level activity detected (${activeThreats} logged threat(s)). Continue monitoring and apply suggested hardening steps.`
+  }
+
+  if (latestSeverity === "Critical") {
+    riskSummary += ` Latest detection severity: Critical.`
+  }
+
+  const sortedRecommendations = [...recommendations].sort((a, b) => {
+    const order = { critical: 0, warning: 1, stable: 2 }
+    return order[a.level] - order[b.level]
+  })
+
+  if (checklist.length === 0) {
+    checklist.push("Review latest threat logs in the Attack Logs page")
+    checklist.push("Run batch CSV analysis for bulk traffic screening")
+  }
+
+  return {
+    posture,
+    postureClass,
+    hasCriticalAlert,
+    securityScore,
+    riskSummary,
+    recommendations: sortedRecommendations,
+    checklist,
+  }
+}
+
 export default function DashboardHome() {
   const [backendOk, setBackendOk] = useState(null)
   const [refreshTick, setRefreshTick] = useState(0)
@@ -90,6 +274,16 @@ export default function DashboardHome() {
   const isHighAlert =
     Number(attackRate) >= ATTACK_RATE_ALERT_THRESHOLD ||
     criticalThreats > 0
+
+  const securityInsights = generateSecurityRecommendations({
+    attackRate,
+    criticalThreatCount: criticalThreats,
+    latestThreat,
+    detectionAccuracy,
+    recentThreats,
+    activeThreats,
+    highThreatCount: highThreats,
+  })
 
   useEffect(() => {
     checkHealth()
@@ -257,6 +451,102 @@ export default function DashboardHome() {
             })}
           </ul>
         )}
+      </div>
+
+      <div
+        className="panel dashboard-panel ai-recommendations-panel"
+        data-refresh={refreshTick}
+      >
+        <div className="ai-recommendations-header">
+          <div>
+            <h2 className="page-title">AI Security Recommendations</h2>
+            <p className="page-subtitle">
+              Dynamic defensive guidance based on live threat analytics.
+              Refreshes every 5 seconds.
+            </p>
+          </div>
+
+          {securityInsights.hasCriticalAlert && (
+            <div className="ai-critical-pulse">
+              <span className="ai-critical-pulse-dot" />
+              <span>Critical Alert</span>
+            </div>
+          )}
+        </div>
+
+        <div className="ai-recommendations-overview">
+          <div
+            className={`ai-posture-card ${securityInsights.postureClass}`}
+          >
+            <h3>Threat Posture Status</h3>
+            <p className="ai-posture-value">
+              {securityInsights.posture}
+            </p>
+            <p className="ai-posture-meta">
+              Based on attack rate, severity, and recent activity
+            </p>
+          </div>
+
+          <div className="ai-score-card">
+            <h3>Security Score</h3>
+            <div className="security-score-meter">
+              <div
+                className="security-score-fill"
+                style={{
+                  width: `${securityInsights.securityScore}%`,
+                }}
+              />
+            </div>
+            <p className="ai-score-value">
+              {securityInsights.securityScore}
+              <span>/100</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="ai-risk-summary">
+          <h3>AI-Generated Risk Summary</h3>
+          <p>{securityInsights.riskSummary}</p>
+        </div>
+
+        <h3 className="ai-section-title">Priority Recommendations</h3>
+        <div className="ai-recommendations-grid">
+          {securityInsights.recommendations.map((item) => (
+            <div
+              key={item.id}
+              className={`ai-recommendation-card ${item.level}`}
+            >
+              <div className="ai-recommendation-header">
+                <span
+                  className={`ai-priority-badge ${item.level}`}
+                >
+                  {item.priority}
+                </span>
+                <span className={`ai-level-label ${item.level}`}>
+                  {item.level === "critical"
+                    ? "Critical"
+                    : item.level === "warning"
+                      ? "Warning"
+                      : "Stable"}
+                </span>
+              </div>
+              <h4>{item.title}</h4>
+              <p>{item.description}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="ai-checklist-section">
+          <h3 className="ai-section-title">Security Action Checklist</h3>
+          <ul className="ai-checklist">
+            {securityInsights.checklist.map((action, index) => (
+              <li key={`${action}-${index}`}>
+                <span className="ai-check-icon">✓</span>
+                {action}
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
       <div className="panel dashboard-panel">

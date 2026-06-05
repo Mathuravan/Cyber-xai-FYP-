@@ -1175,3 +1175,319 @@
     align-items: flex-start;
   }
 }
+
+/* =======================
+   AI SECURITY RECOMMENDATIONS
+======================= */
+
+.ai-recommendations-panel {
+  margin-bottom: 20px;
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  box-shadow: 0 0 24px rgba(139, 92, 246, 0.08);
+}
+
+.ai-recommendations-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.ai-critical-pulse {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #fecaca;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+}
+
+.ai-critical-pulse-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: pulse-red 1.2s ease-in-out infinite;
+}
+
+.ai-recommendations-overview {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(240px, 1fr)
+  );
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.ai-posture-card,
+.ai-score-card {
+  background: rgba(15, 23, 42, 0.95);
+  border-radius: 12px;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ai-posture-card:hover,
+.ai-score-card:hover {
+  transform: translateY(-2px);
+}
+
+.ai-posture-card h3,
+.ai-score-card h3 {
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 10px;
+}
+
+.ai-posture-card.critical {
+  border-color: rgba(239, 68, 68, 0.5);
+  box-shadow: 0 0 18px rgba(239, 68, 68, 0.15);
+  animation: alert-border-glow 2s ease-in-out infinite;
+}
+
+.ai-posture-card.warning {
+  border-color: rgba(245, 158, 11, 0.45);
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.12);
+}
+
+.ai-posture-card.stable {
+  border-color: rgba(34, 197, 94, 0.4);
+  box-shadow: 0 0 14px rgba(34, 197, 94, 0.1);
+}
+
+.ai-posture-value {
+  color: #e2e8f0;
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.ai-posture-meta {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.security-score-meter {
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.security-score-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ef4444, #f59e0b, #22c55e);
+  transition: width 0.6s ease;
+}
+
+.ai-score-value {
+  color: #e2e8f0;
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.ai-score-value span {
+  color: #64748b;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.ai-risk-summary {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+}
+
+.ai-risk-summary h3 {
+  color: #e2e8f0;
+  font-size: 15px;
+  margin: 0 0 8px;
+}
+
+.ai-risk-summary p {
+  color: #cbd5e1;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.ai-section-title {
+  color: #e2e8f0;
+  font-size: 16px;
+  margin: 0 0 14px;
+}
+
+.ai-recommendations-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(260px, 1fr)
+  );
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.ai-recommendation-card {
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ai-recommendation-card:hover {
+  transform: translateY(-2px);
+}
+
+.ai-recommendation-card.critical {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.08);
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.12);
+}
+
+.ai-recommendation-card.warning {
+  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.ai-recommendation-card.stable {
+  border-color: rgba(34, 197, 94, 0.4);
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.ai-recommendation-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.ai-priority-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+}
+
+.ai-priority-badge.critical {
+  color: #fecaca;
+  background: rgba(239, 68, 68, 0.25);
+}
+
+.ai-priority-badge.warning {
+  color: #fde68a;
+  background: rgba(245, 158, 11, 0.25);
+}
+
+.ai-priority-badge.stable {
+  color: #bbf7d0;
+  background: rgba(34, 197, 94, 0.2);
+}
+
+.ai-level-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ai-level-label.critical {
+  color: #fca5a5;
+}
+
+.ai-level-label.warning {
+  color: #fcd34d;
+}
+
+.ai-level-label.stable {
+  color: #86efac;
+}
+
+.ai-recommendation-card h4 {
+  color: #e2e8f0;
+  font-size: 16px;
+  margin: 0 0 8px;
+}
+
+.ai-recommendation-card p {
+  color: #94a3b8;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.ai-checklist-section {
+  margin-top: 4px;
+}
+
+.ai-checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ai-checklist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
+  font-size: 14px;
+  line-height: 1.4;
+  transition: background 0.2s ease;
+}
+
+.ai-checklist li:hover {
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.ai-check-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .ai-recommendations-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-recommendations-grid {
+    grid-template-columns: 1fr;
+  }
+}
