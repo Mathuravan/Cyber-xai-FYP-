@@ -578,22 +578,69 @@ async def predict_batch(
         )
 
     # =====================================
-    # CHECK REQUIRED COLUMNS
+    # INTELLIGENT DYNAMIC CSV SCHEMA MAPPING
     # =====================================
-    missing = [
-        col
-        for col in FEATURES
-        if col not in df.columns
-    ]
+    aliases = {
+        "duration": ["duration", "flow_duration", "flow duration", "connection_duration", "dur"],
+        "src_bytes": ["src_bytes", "source_bytes", "bytes_sent", "total_length_of_fwd_packets", "outbound_bytes"],
+        "dst_bytes": ["dst_bytes", "destination_bytes", "bytes_received", "total_length_of_bwd_packets", "inbound_bytes"],
+        "count": ["count", "packet_count", "connection_count", "flow_packets", "packets_per_second"]
+    }
+    
+    mapping = {}
+    missing_features = []
+    df_columns = list(df.columns)
+    
+    for feature, expected_aliases in aliases.items():
+        matched = False
+        
+        for col in df_columns:
+            if col not in mapping and col.lower() == feature.lower():
+                mapping[col] = feature
+                matched = True
+                break
+        
+        if matched: continue
+        
+        for alias in expected_aliases:
+            for col in df_columns:
+                if col not in mapping and col.lower() == alias.lower():
+                    mapping[col] = feature
+                    matched = True
+                    break
+            if matched: break
+            
+        if matched: continue
+        
+        for alias in expected_aliases:
+            for col in df_columns:
+                if col in mapping: continue
+                norm_col = col.lower().replace(" ", "").replace("_", "")
+                norm_alias = alias.lower().replace(" ", "").replace("_", "")
+                if len(norm_alias) >= 3 and norm_alias in norm_col:
+                    mapping[col] = feature
+                    matched = True
+                    break
+            if matched: break
+            
+        if not matched:
+            missing_features.append(feature)
 
-    if missing:
-
+    if len(mapping) == 0:
         raise HTTPException(
             status_code=400,
-
-            detail=
-            f"CSV missing columns: {', '.join(missing)}",
+            detail="No suitable mappings could be found for the required features. Please check your CSV format.",
         )
+
+    print("Detected Mapping:")
+    for orig, standard in mapping.items():
+        print(f"{orig} -> {standard}")
+
+    df = df.rename(columns=mapping)
+    
+    for missing_feature in missing_features:
+        print(f"Warning: Missing feature '{missing_feature}'. Filling with default value 0.")
+        df[missing_feature] = 0.0
 
     try:
 
