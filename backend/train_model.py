@@ -6,7 +6,9 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report
 
 # --------------------------------------------------
-# Project paths
+# CyberXAI model training (local)
+# For Google Colab workflow, use:
+#   notebooks/CyberXAI_NSL-KDD_Training.ipynb
 # --------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data" / "NSL-KDD"
