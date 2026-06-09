@@ -21,6 +21,7 @@ import {
   getDetectionAccuracy,
   getSystemUptime,
   getThreatSeverityLabel,
+  getPredictionHistory,
 } from "../services/storageService"
 
 import SystemStatusCard from "../components/dashboard/SystemStatusCard"
@@ -549,9 +550,24 @@ export default function DashboardHome() {
         </div>
       </div>
 
-      <div className="panel dashboard-panel">
-        <h2 className="page-title">Attack Analytics</h2>
-        <div className="summary-cards">
+      {/* Threat Trend Analytics */}
+      <div className="panel dashboard-panel threat-trend-panel" data-refresh={refreshTick}>
+        <div className="threat-trend-header">
+          <h2 className="page-title">Threat Trend Analytics</h2>
+          <p className="page-subtitle">Real-time analysis of attack vectors and prediction trends.</p>
+        </div>
+
+        {/* Analytics Insights */}
+        <div className="analytics-insights-bar">
+          <h3><span className="insight-icon">💡</span> Analytics Insights</h3>
+          <ul className="insights-list">
+             {Number(attackRate) > 15 ? <li>Attack activity is currently elevated at {attackRate}%.</li> : <li>Normal traffic dominates recent predictions.</li>}
+             {criticalThreats > 0 ? <li>Critical threats demand immediate attention.</li> : (highThreats > 0 ? <li>Most threats are High severity.</li> : <li>Detection confidence remains stable.</li>)}
+          </ul>
+        </div>
+
+        {/* Analytics Cards */}
+        <div className="summary-cards trend-analytics-cards">
           <div className="card">
             <h3>Total Predictions</h3>
             <p className="card-value">{totalPredictions}</p>
@@ -561,13 +577,97 @@ export default function DashboardHome() {
             <p className="card-value attack">{attackCount}</p>
           </div>
           <div className="card normal">
-            <h3>Normal Traffic</h3>
+            <h3>Total Normal Traffic</h3>
             <p className="card-value">{normalCount}</p>
+          </div>
+          <div className="card">
+            <h3>Average Confidence</h3>
+            <p className="card-value">{detectionAccuracy}%</p>
           </div>
           <div className="card">
             <h3>Attack Rate</h3>
             <p className="card-value">{attackRate}%</p>
           </div>
+        </div>
+
+        <div className="trend-panels-grid">
+           {/* Threat Trend Summary Panel */}
+           <div className="trend-summary-panel">
+              <h3>Threat Trend Summary</h3>
+              <div className="trend-indicator-box">
+                {Number(attackRate) >= 15 || criticalThreats > 0 ? (
+                  <div className="trend-status increasing">
+                    <span className="trend-arrow">↑</span>
+                    <h4>Increasing Threat Activity</h4>
+                    <p>Attack frequency is rising.</p>
+                  </div>
+                ) : (Number(attackRate) >= 5 || activeThreats > 0 ? (
+                  <div className="trend-status stable">
+                    <span className="trend-arrow">→</span>
+                    <h4>Stable Threat Activity</h4>
+                    <p>Threat detection is stable.</p>
+                  </div>
+                ) : (
+                  <div className="trend-status decreasing">
+                    <span className="trend-arrow">↓</span>
+                    <h4>Decreasing Threat Activity</h4>
+                    <p>No significant threats detected recently.</p>
+                  </div>
+                ))}
+              </div>
+           </div>
+
+           {/* Severity Distribution Panel */}
+           <div className="severity-distribution-panel">
+              <h3>Severity Distribution</h3>
+              <div className="severity-bars">
+                 <div className="severity-bar-item">
+                    <span className="sev-label critical">Critical</span>
+                    <span className="sev-count">{criticalThreats}</span>
+                 </div>
+                 <div className="severity-bar-item">
+                    <span className="sev-label high">High</span>
+                    <span className="sev-count">{highThreats}</span>
+                 </div>
+                 <div className="severity-bar-item">
+                    <span className="sev-label medium">Medium</span>
+                    <span className="sev-count">{mediumThreats}</span>
+                 </div>
+                 <div className="severity-bar-item">
+                    <span className="sev-label low">Low</span>
+                    <span className="sev-count">{lowThreats}</span>
+                 </div>
+              </div>
+           </div>
+        </div>
+
+        {/* Recent Prediction Trends */}
+        <div className="recent-prediction-trends">
+           <h3>Recent Prediction Trends</h3>
+           {getPredictionHistory().slice(0, 10).length === 0 ? (
+              <p>No prediction history available.</p>
+           ) : (
+              <div className="table-responsive">
+                <table className="trends-table">
+                  <thead>
+                    <tr>
+                      <th>Timestamp</th>
+                      <th>Label</th>
+                      <th>Confidence</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {getPredictionHistory().slice(0, 10).map((pred, i) => (
+                      <tr key={i}>
+                        <td>{pred.timestamp}</td>
+                        <td><span className={`severity-badge ${pred.label.toLowerCase() === 'attack' ? 'critical' : 'low'}`}>{pred.label}</span></td>
+                        <td>{(Number(pred.confidence) * 100).toFixed(1)}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+           )}
         </div>
       </div>
 
