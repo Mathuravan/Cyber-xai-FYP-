@@ -6,6 +6,8 @@ import {
   savePredictionHistory,
 } from "../services/storageService";
 
+import { generateExecutiveReport } from "../services/reportService";
+
 export default function BatchUpload() {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -211,9 +213,19 @@ export default function BatchUpload() {
             <div className="panel dashboard-panel results-table-panel" style={{ marginTop: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h2>Top 10 Critical Threats</h2>
-                <button type="button" className="btn logs-export-btn" onClick={handleDownloadReport}>
-                  Download Executive Report
-                </button>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button type="button" className="btn logs-export-btn" onClick={handleDownloadReport}>
+                    Export CSV
+                  </button>
+                  <button 
+                    type="button" 
+                    className="btn logs-export-btn" 
+                    onClick={generateExecutiveReport}
+                    style={{ background: "linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 0.95))", borderColor: "rgba(248, 113, 113, 0.5)" }}
+                  >
+                    Export PDF
+                  </button>
+                </div>
               </div>
 
               <div className="table-responsive" style={{ marginTop: '16px' }}>
@@ -256,9 +268,19 @@ export default function BatchUpload() {
             <div className="panel dashboard-panel results-table-panel" style={{ marginTop: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h2>Prediction Results</h2>
-                <button type="button" className="btn logs-export-btn" onClick={handleDownloadReport}>
-                  Download Report
-                </button>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button type="button" className="btn logs-export-btn" onClick={handleDownloadReport}>
+                    Export CSV
+                  </button>
+                  <button 
+                    type="button" 
+                    className="btn logs-export-btn" 
+                    onClick={generateExecutiveReport}
+                    style={{ background: "linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 0.95))", borderColor: "rgba(248, 113, 113, 0.5)" }}
+                  >
+                    Export PDF
+                  </button>
+                </div>
               </div>
 
               <div className="table-responsive" style={{ marginTop: '16px' }}>

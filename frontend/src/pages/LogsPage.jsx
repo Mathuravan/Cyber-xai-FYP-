@@ -5,6 +5,8 @@ import {
   clearAttackLogs,
 } from "../services/storageService"
 
+import { generateExecutiveReport } from "../services/reportService"
+
 const FILTER_OPTIONS = [
   { value: "all", label: "All Logs" },
   { value: "attack", label: "Attack Only" },
@@ -311,6 +313,16 @@ export default function LogsPage() {
             disabled={logs.length === 0}
           >
             Export CSV
+          </button>
+
+          <button
+            type="button"
+            className="btn logs-export-btn"
+            onClick={generateExecutiveReport}
+            disabled={logs.length === 0}
+            style={{ background: "linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 0.95))", borderColor: "rgba(248, 113, 113, 0.5)" }}
+          >
+            Export PDF Report
           </button>
 
           {logs.length > 0 && (

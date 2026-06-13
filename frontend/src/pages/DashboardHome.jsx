@@ -21,8 +21,11 @@ import {
   getDetectionAccuracy,
   getSystemUptime,
   getThreatSeverityLabel,
+  getThreatSeverityLabel,
   getPredictionHistory,
 } from "../services/storageService"
+
+import { generateExecutiveReport } from "../services/reportService"
 
 import SystemStatusCard from "../components/dashboard/SystemStatusCard"
 import LatestPredictionCard from "../components/dashboard/LatestPredictionCard"
@@ -311,7 +314,15 @@ export default function DashboardHome() {
           </p>
         </div>
 
-        <div className="monitoring-topbar-meta">
+        <div className="monitoring-topbar-meta" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button 
+            type="button" 
+            className="btn logs-export-btn"
+            onClick={generateExecutiveReport}
+            style={{ padding: "6px 12px", fontSize: "13px" }}
+          >
+            Download PDF Report
+          </button>
           <span className="system-online-badge">System Online</span>
           <span className="live-clock">{currentTime}</span>
         </div>
