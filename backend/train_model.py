@@ -3,7 +3,7 @@ import json
 import joblib
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import accuracy_score, classification_report, precision_score, recall_score, f1_score, confusion_matrix
 
 # --------------------------------------------------
 # CyberXAI model training (local)
@@ -80,6 +80,10 @@ model.fit(X_train, y_train)
 # --------------------------------------------------
 y_pred = model.predict(X_test)
 accuracy = accuracy_score(y_test, y_pred)
+precision = precision_score(y_test, y_pred, zero_division=0)
+recall = recall_score(y_test, y_pred, zero_division=0)
+f1 = f1_score(y_test, y_pred, zero_division=0)
+cm = confusion_matrix(y_test, y_pred).tolist()
 
 print("\n--- NSL-KDD 4-Feature Model Results ---")
 print(f"Accuracy: {accuracy:.4f}")
@@ -91,11 +95,28 @@ print(classification_report(y_test, y_pred))
 model_path = MODELS_DIR / "nslkdd_4f_rf_model.joblib"
 features_path = MODELS_DIR / "nslkdd_4f_features.json"
 sample_path = MODELS_DIR / "nslkdd_4f_sample_input.csv"
+metrics_path = MODELS_DIR / "model_metrics.json"
 
 joblib.dump(model, model_path)
 
 with open(features_path, "w") as f:
     json.dump(selected_features, f)
+
+metrics = {
+    "accuracy": float(accuracy),
+    "precision": float(precision),
+    "recall": float(recall),
+    "f1_score": float(f1),
+    "confusion_matrix": cm,
+    "train_samples": len(X_train),
+    "test_samples": len(X_test),
+    "model_type": "Random Forest",
+    "selected_features": selected_features,
+    "feature_importances": model.feature_importances_.tolist()
+}
+
+with open(metrics_path, "w") as f:
+    json.dump(metrics, f, indent=4)
 
 sample_df = X_test.head(5).copy()
 sample_df["actual_label"] = y_test.head(5).values
@@ -105,6 +126,7 @@ print("\nSaved files:")
 print(f"- {model_path}")
 print(f"- {features_path}")
 print(f"- {sample_path}")
+print(f"- {metrics_path}")
 
 print("TRAIN_FILE:", TRAIN_FILE)
 print("EXISTS:", TRAIN_FILE.exists())

@@ -1,0 +1,31 @@
+{
+    "accuracy": 0.7439673527324343,
+    "precision": 0.9242879461603173,
+    "recall": 0.5993142679030624,
+    "f1_score": 0.7271438025905266,
+    "confusion_matrix": [
+        [
+            9081,
+            630
+        ],
+        [
+            5142,
+            7691
+        ]
+    ],
+    "train_samples": 125973,
+    "test_samples": 22544,
+    "model_type": "Random Forest",
+    "selected_features": [
+        "duration",
+        "src_bytes",
+        "dst_bytes",
+        "count"
+    ],
+    "feature_importances": [
+        0.008912553086508677,
+        0.5330170130712739,
+        0.3098359476221455,
+        0.1482344862200719
+    ]
+}
