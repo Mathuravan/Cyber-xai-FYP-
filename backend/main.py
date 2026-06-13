@@ -643,93 +643,74 @@ async def predict_batch(
         df[missing_feature] = 0.0
 
     try:
+        input_df = df[FEATURES]
 
-        input_df = df[
-            FEATURES
-        ]
+        predictions = ml_model.predict(input_df)
+        probabilities = ml_model.predict_proba(input_df)
 
-        predictions = (
-            ml_model.predict(
-                input_df
-            )
-        )
+        import numpy as np
+        
+        df_results = df.copy()
+        df_results["pred_class"] = predictions
+        df_results["confidence"] = np.where(df_results["pred_class"] == 1, probabilities[:, 1], probabilities[:, 0])
+        df_results["label"] = np.where(df_results["pred_class"] == 1, "Attack", "Normal")
+        
+        total_rows = len(df_results)
+        LARGE_DATASET_THRESHOLD = 5000
+        summary_mode = total_rows > LARGE_DATASET_THRESHOLD
 
-        probabilities = (
-            ml_model.predict_proba(
-                input_df
-            )
-        )
+        attack_count = int((df_results["pred_class"] == 1).sum())
+        normal_count = int(total_rows - attack_count)
+        attack_rate = round((attack_count / total_rows) * 100, 2) if total_rows > 0 else 0.0
 
-        results = []
+        attack_df = df_results[df_results["label"] == "Attack"]
+        critical_count = int((attack_df["confidence"] >= 0.90).sum())
+        high_count = int(((attack_df["confidence"] >= 0.75) & (attack_df["confidence"] < 0.90)).sum())
+        medium_count = int(((attack_df["confidence"] >= 0.50) & (attack_df["confidence"] < 0.75)).sum())
+        low_count = int((attack_df["confidence"] < 0.50).sum())
 
-        normal_count = 0
+        def get_severity(conf):
+            if conf >= 0.9: return "Critical"
+            if conf >= 0.75: return "High"
+            if conf >= 0.5: return "Medium"
+            return "Low"
 
-        attack_count = 0
-
-        for index in range(
-            len(df)
-        ):
-
-            pred_class = (
-                predictions[index]
-            )
-
-            probs = (
-                probabilities[index]
-            )
-
-            if pred_class == 1:
-
-                label = "Attack"
-
-                confidence = float(
-                    probs[1]
-                )
-
-                attack_count += 1
-
-            else:
-
-                label = "Normal"
-
-                confidence = float(
-                    probs[0]
-                )
-
-                normal_count += 1
-
-            results.append({
-                "row":
-                int(index) + 1,
-
-                "label":
-                label,
-
-                "confidence":
-                round(
-                    confidence,
-                    4
-                ),
+        top_threats_df = attack_df.nlargest(10, "confidence")
+        top_threats = []
+        for i, row in top_threats_df.iterrows():
+            top_threats.append({
+                "row": int(i) + 1,
+                "label": row["label"],
+                "confidence": round(float(row["confidence"]), 4),
+                "severity": get_severity(row["confidence"]),
+                "summary": f"Threat detected (Dur: {row.get('duration', 0)}, Count: {row.get('count', 0)})"
             })
 
+        results = []
+        if not summary_mode:
+            for i, row in df_results.iterrows():
+                results.append({
+                    "row": int(i) + 1,
+                    "label": row["label"],
+                    "confidence": round(float(row["confidence"]), 4),
+                })
+
         return {
-            "filename":
-            file.filename,
-
-            "total_rows":
-            len(results),
-
-            "columns":
-            len(FEATURES),
-
-            "normal_count":
-            normal_count,
-
-            "attack_count":
-            attack_count,
-
-            "results":
-            results,
+            "filename": file.filename,
+            "total_rows": total_rows,
+            "columns": len(FEATURES),
+            "normal_count": normal_count,
+            "attack_count": attack_count,
+            "attack_rate": attack_rate,
+            "summary_mode": summary_mode,
+            "results": results,
+            "top_threats": top_threats,
+            "severity_distribution": {
+                "critical": critical_count,
+                "high": high_count,
+                "medium": medium_count,
+                "low": low_count
+            }
         }
 
     except Exception as e:
