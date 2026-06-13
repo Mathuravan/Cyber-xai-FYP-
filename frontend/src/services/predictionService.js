@@ -129,3 +129,23 @@ export const predictBatch = async (
   return res.json()
 
 }
+
+
+// =====================================
+// MODEL METRICS
+// =====================================
+export const fetchModelMetrics = async () => {
+
+  const res = await fetch(
+    `${API_BASE}/model/metrics`
+  )
+
+  if (!res.ok) {
+    throw new Error(
+      await parseError(res)
+    )
+  }
+
+  return res.json()
+
+}

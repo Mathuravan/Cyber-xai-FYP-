@@ -3,6 +3,7 @@ import { clearAuth } from "../../services/authService"
 
 const MENU_ITEMS = [
   { to: "/dashboard", label: "Overview", end: true },
+  { to: "/dashboard/model-metrics", label: "Model Performance" },
   { to: "/dashboard/predict", label: "Single Predict" },
   { to: "/dashboard/batch", label: "Batch CSV" },
   { to: "/dashboard/logs", label: "Logs" },

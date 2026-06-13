@@ -15,6 +15,7 @@ import DashboardHome from "./pages/DashboardHome";
 import SinglePredict from "./pages/SinglePredict";
 import BatchUpload from "./pages/BatchUpload";
 import LogsPage from "./pages/LogsPage";
+import ModelMetrics from "./pages/ModelMetrics";
 
 function App() {
   return (
@@ -29,6 +30,9 @@ function App() {
           <Route path="/dashboard" element={<DashboardLayout />}>
             {/* Dashboard Overview */}
             <Route index element={<DashboardHome />} />
+
+            {/* Model Performance */}
+            <Route path="model-metrics" element={<ModelMetrics />} />
 
             {/* Single Prediction */}
             <Route path="predict" element={<SinglePredict />} />
