@@ -21,7 +21,6 @@ import {
   getDetectionAccuracy,
   getSystemUptime,
   getThreatSeverityLabel,
-  getThreatSeverityLabel,
   getPredictionHistory,
 } from "../services/storageService"
 

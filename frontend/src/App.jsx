@@ -16,6 +16,7 @@ import SinglePredict from "./pages/SinglePredict";
 import BatchUpload from "./pages/BatchUpload";
 import LogsPage from "./pages/LogsPage";
 import ModelMetrics from "./pages/ModelMetrics";
+import Notifications from "./pages/Notifications";
 
 function App() {
   return (
@@ -42,6 +43,9 @@ function App() {
 
             {/* Logs */}
             <Route path="logs" element={<LogsPage />} />
+
+            {/* Security Notifications */}
+            <Route path="notifications" element={<Notifications />} />
           </Route>
         </Route>
 

@@ -7,6 +7,7 @@ const MENU_ITEMS = [
   { to: "/dashboard/predict", label: "Single Predict" },
   { to: "/dashboard/batch", label: "Batch CSV" },
   { to: "/dashboard/logs", label: "Logs" },
+  { to: "/dashboard/notifications", label: "Security Notifications" },
 ]
 
 export default function Sidebar() {
