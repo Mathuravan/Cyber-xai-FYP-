@@ -8,6 +8,7 @@ const MENU_ITEMS = [
   { to: "/dashboard/batch", label: "Batch CSV" },
   { to: "/dashboard/logs", label: "Logs" },
   { to: "/dashboard/notifications", label: "Security Notifications" },
+  { to: "/dashboard/threat-visualization", label: "Threat Visualization" },
 ]
 
 export default function Sidebar() {

@@ -17,6 +17,7 @@ import BatchUpload from "./pages/BatchUpload";
 import LogsPage from "./pages/LogsPage";
 import ModelMetrics from "./pages/ModelMetrics";
 import Notifications from "./pages/Notifications";
+import ThreatVisualization from "./pages/ThreatVisualization";
 
 function App() {
   return (
@@ -46,6 +47,12 @@ function App() {
 
             {/* Security Notifications */}
             <Route path="notifications" element={<Notifications />} />
+
+            {/* Threat Visualization */}
+            <Route
+              path="threat-visualization"
+              element={<ThreatVisualization />}
+            />
           </Route>
         </Route>
 
