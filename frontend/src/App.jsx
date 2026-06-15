@@ -10,6 +10,7 @@ import ProtectedRoute from "./utils/ProtectedRoute";
 // Layout
 import DashboardLayout from "./components/layout/DashboardLayout";
 
+
 // Dashboard Pages
 import DashboardHome from "./pages/DashboardHome";
 import SinglePredict from "./pages/SinglePredict";
@@ -18,6 +19,7 @@ import LogsPage from "./pages/LogsPage";
 import ModelMetrics from "./pages/ModelMetrics";
 import Notifications from "./pages/Notifications";
 import ThreatVisualization from "./pages/ThreatVisualization";
+import SecurityCenter from "./pages/SecurityCenter";
 
 function App() {
   return (
@@ -35,6 +37,9 @@ function App() {
 
             {/* Model Performance */}
             <Route path="model-metrics" element={<ModelMetrics />} />
+
+            {/* Security center */}
+            <Route path="security-center"element={<SecurityCenter />} />
 
             {/* Single Prediction */}
             <Route path="predict" element={<SinglePredict />} />
