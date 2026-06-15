@@ -10,6 +10,7 @@ const MENU_ITEMS = [
   { to: "/dashboard/notifications", label: "Security Notifications" },
   { to: "/dashboard/threat-visualization", label: "Threat Visualization" },
   { to: "/dashboard/security-center", label: "Security Center" },
+  {to: "/dashboard/audit-dashboard",label: "Audit Dashboard" },
 ]
 
 export default function Sidebar() {

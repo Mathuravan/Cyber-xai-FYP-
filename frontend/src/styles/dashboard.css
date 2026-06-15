@@ -2286,123 +2286,77 @@
   border: 1px dashed rgba(255, 255, 255, 0.12);
 }
 
+
 /* =======================
-   SECURITY CENTER 
+   AUDIT DASHBOARD
 ======================= */
 
-.security-center-page {
+.audit-dashboard-page {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
 
-.security-center-panel {
-  background: rgba(15, 23, 42, 0.96);
-  border: 1px solid rgba(0, 207, 255, 0.18);
-  border-radius: 14px;
-  padding: 22px;
-  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.12);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.security-center-panel:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(0, 207, 255, 0.12);
-}
-
-.security-center-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #f8fafc;
-  margin-bottom: 10px;
-}
-
-.security-center-subtitle {
-  font-size: 14px;
-  color: #94a3b8;
-  margin-bottom: 16px;
-  line-height: 1.5;
-}
-
-.security-status-grid {
+.audit-summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 16px;
 }
 
-.security-status-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  padding: 18px;
-  transition: transform 0.2s ease;
+.audit-card {
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(0, 207, 255, 0.18);
+  border-radius: 14px;
+  padding: 20px;
 }
 
-.security-status-card:hover {
-  transform: translateY(-2px);
-}
-
-.security-status-card h3 {
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.audit-card h3 {
   color: #94a3b8;
   margin-bottom: 10px;
 }
 
-.security-status-value {
-  font-size: 26px;
+.audit-value {
+  font-size: 28px;
   font-weight: 800;
   color: #e2e8f0;
 }
 
-.security-status-value.safe {
-  color: #34d399;
+.audit-events-table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
-.security-status-value.warning {
-  color: #fbbf24;
+.audit-events-table th,
+.audit-events-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
-.security-status-value.critical {
-  color: #f87171;
+.audit-events-table th {
+  color: #94a3b8;
 }
 
-.security-action-box {
-  margin-top: 20px;
-  padding: 16px;
+.audit-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+  gap: 16px;
+}
+
+.audit-status-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(0, 207, 255, 0.15);
+  padding: 18px;
 }
 
-.security-action-title {
-  font-size: 16px;
-  color: #e2e8f0;
+.audit-status-card h3 {
   margin-bottom: 8px;
 }
 
-.security-action-text {
-  font-size: 14px;
-  color: #cbd5e1;
-  line-height: 1.6;
-}
-
-.security-center-btn {
-  margin-top: 14px;
-  padding: 10px 16px;
-  border-radius: 8px;
-  background: rgba(0, 207, 255, 0.15);
-  border: 1px solid rgba(0, 207, 255, 0.4);
-  color: #00cfff;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.security-center-btn:hover {
-  background: rgba(0, 207, 255, 0.25);
-  transform: translateY(-1px);
+.audit-status-active {
+  color: #34d399;
+  font-weight: 700;
 }
 
 @media (max-width: 1200px) {

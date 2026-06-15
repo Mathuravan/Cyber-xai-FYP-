@@ -20,6 +20,7 @@ import ModelMetrics from "./pages/ModelMetrics";
 import Notifications from "./pages/Notifications";
 import ThreatVisualization from "./pages/ThreatVisualization";
 import SecurityCenter from "./pages/SecurityCenter";
+import AuditDashboard from "./pages/AuditDashboard";
 
 function App() {
   return (
@@ -58,8 +59,10 @@ function App() {
               path="threat-visualization"
               element={<ThreatVisualization />}
             />
-          </Route>
-        </Route>
+            </Route>
+
+            <Route path="audit-dashboard" element={<AuditDashboard />} />
+            </Route>
 
         {/* ================= FALLBACK ================= */}
         <Route path="*" element={<Navigate to="/" replace />} />
