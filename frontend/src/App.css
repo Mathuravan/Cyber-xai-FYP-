@@ -22,74 +22,7 @@ body {
   }
 }
 
-.sidebar {
-  width: 270px;
-  background: #0f172a;
-  color: white;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-}
-
-@media (max-width: 768px) {
-  .sidebar {
-    width: 100%;
-    padding: 16px;
-  }
-}
-
-.logo {
-  font-size: 26px;
-  font-weight: 700;
-  margin-bottom: 32px;
-  color: #00cfff;
-  letter-spacing: 0.5px;
-}
-
-.sidebar-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  flex-grow: 1;
-}
-
-.menu {
-  display: block;
-  text-decoration: none;
-  padding: 14px 18px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: 500;
-  color: #94a3b8;
-  transition: all 0.2s ease;
-  border: 1px solid transparent;
-  width: 100%;
-  text-align: left;
-}
-
-.menu:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #e2e8f0;
-}
-
-.menu.active {
-  background: rgba(0, 207, 255, 0.1);
-  color: #00cfff;
-  border-color: rgba(0, 207, 255, 0.2);
-}
-
-.sidebar-logout {
-  margin-top: 32px;
-  color: #fca5a5;
-  background: transparent;
-}
-
-.sidebar-logout:hover {
-  background: rgba(239, 68, 68, 0.1);
-  color: #fef2f2;
-}
+/* Sidebar styles live in src/styles/sidebar.css (imported by Sidebar.jsx) */
 
 .main {
   flex: 1;

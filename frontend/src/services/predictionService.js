@@ -95,7 +95,8 @@ export const predictSingle = async (
 // BATCH PREDICTION
 // =====================================
 export const predictBatch = async (
-  file
+  file,
+  mapping = null
 ) => {
 
   const token = getToken()
@@ -106,6 +107,13 @@ export const predictBatch = async (
   const formData = new FormData()
 
   formData.append("file", file)
+
+  if (mapping) {
+    formData.append(
+      "mapping",
+      JSON.stringify(mapping)
+    )
+  }
 
   const res = await fetch(
     `${API_BASE}/predict/batch`,
@@ -144,6 +152,68 @@ export const fetchModelMetrics = async () => {
     throw new Error(
       await parseError(res)
     )
+  }
+
+  return res.json()
+
+}
+
+
+// =====================================
+// COMBINED XAI EXPLANATION (SHAP + LIME)
+// =====================================
+export const explainCombined = async (features) => {
+
+  const token = getToken()
+  if (!token) {
+    throw new Error("Authentication required")
+  }
+
+  const res = await fetch(
+    `${API_BASE}/api/explain/combined`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify(features),
+    }
+  )
+
+  if (!res.ok) {
+    throw new Error(await parseError(res))
+  }
+
+  return res.json()
+
+}
+
+
+// =====================================
+// MODEL RESILIENCE TEST
+// =====================================
+export const testResilience = async (features) => {
+
+  const token = getToken()
+  if (!token) {
+    throw new Error("Authentication required")
+  }
+
+  const res = await fetch(
+    `${API_BASE}/api/test/resilience`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify(features),
+    }
+  )
+
+  if (!res.ok) {
+    throw new Error(await parseError(res))
   }
 
   return res.json()

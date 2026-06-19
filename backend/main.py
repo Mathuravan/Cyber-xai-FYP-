@@ -1,6 +1,7 @@
 from fastapi import (
     FastAPI,
     File,
+    Form,
     HTTPException,
     UploadFile,
     Header,
@@ -13,6 +14,7 @@ from fastapi.middleware.cors import (
 from pydantic import BaseModel
 
 import pandas as pd
+import numpy as np
 import joblib
 import hashlib
 import jwt
@@ -25,6 +27,9 @@ from datetime import (
 from io import BytesIO
 from pathlib import Path
 import json
+
+# LIME
+from lime import lime_tabular
 
 # =====================================
 # AUTH CONFIG
@@ -52,10 +57,34 @@ BASE_DIR = (
     .parent
 )
 
-MODEL_PATH = (
+LEGACY_MODEL_PATH = (
     BASE_DIR
     / "models"
     / "nslkdd_4f_rf_model.joblib"
+)
+
+COLAB_MODEL_PATH = (
+    BASE_DIR
+    / "models"
+    / "model.joblib"
+)
+
+MODEL_PATH = (
+    COLAB_MODEL_PATH
+    if COLAB_MODEL_PATH.exists()
+    else LEGACY_MODEL_PATH
+)
+
+SCALER_PATH = (
+    BASE_DIR
+    / "models"
+    / "scaler.joblib"
+)
+
+MODEL_METADATA_PATH = (
+    BASE_DIR
+    / "models"
+    / "metadata.json"
 )
 
 METRICS_PATH = (
@@ -74,6 +103,8 @@ FEATURES_PATH = (
 # LOAD MODEL
 # =====================================
 ml_model = None
+ml_scaler = None
+model_metadata = {}
 
 try:
 
@@ -98,6 +129,65 @@ except Exception as e:
     print(
         f"Model loading failed: {e}"
     )
+
+try:
+    if SCALER_PATH.exists():
+        ml_scaler = joblib.load(SCALER_PATH)
+        print(f"Scaler loaded: {SCALER_PATH}")
+except Exception as e:
+    print(f"Scaler loading failed: {e}")
+
+try:
+    if MODEL_METADATA_PATH.exists():
+        with open(MODEL_METADATA_PATH, "r", encoding="utf-8") as file:
+            model_metadata = json.load(file)
+        print(f"Model metadata loaded: {MODEL_METADATA_PATH}")
+except Exception as e:
+    print(f"Metadata loading failed: {e}")
+
+# =====================================
+# LIME EXPLAINER (global)
+# =====================================
+# Baseline training-distribution template for the 4 core NSL-KDD features:
+# duration, src_bytes, dst_bytes, count
+_LIME_FEATURE_NAMES = [
+    "duration",
+    "src_bytes",
+    "dst_bytes",
+    "count",
+]
+
+# Representative baseline rows covering normal / attack spectrum
+_LIME_TRAINING_DATA = np.array([
+    [0,   491,   0,     2],
+    [0,   146,   0,     13],
+    [0,   232,   8153,  5],
+    [1,   290,   0,     7],
+    [0,   45076, 0,     1],
+    [0,   0,     0,     123],
+    [2,   5000,  2000,  30],
+    [10,  1000,  500,   10],
+    [0,   10000, 8000,  90],
+    [5,   300,   200,   3],
+    [0,   0,     0,     255],
+    [12,  7000,  4000,  30],
+    [0,   20000, 0,     50],
+    [3,   100,   100,   1],
+    [0,   2000,  1500,  20],
+], dtype=float)
+
+_LIME_TRAINING_LABELS = np.array(
+    [0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0]
+)
+
+lime_explainer = lime_tabular.LimeTabularExplainer(
+    training_data=_LIME_TRAINING_DATA,
+    feature_names=_LIME_FEATURE_NAMES,
+    class_names=["Normal", "Attack"],
+    mode="classification",
+    discretize_continuous=True,
+    random_state=42,
+)
 
 # =====================================
 # FASTAPI APP
@@ -131,6 +221,15 @@ FEATURES = [
     "dst_bytes",
     "count",
 ]
+
+
+def _prepare_model_input(input_df: pd.DataFrame):
+    ordered_df = input_df[FEATURES]
+
+    if ml_scaler is not None:
+        return ml_scaler.transform(ordered_df)
+
+    return ordered_df
 
 # =====================================
 # REQUEST MODELS
@@ -451,6 +550,79 @@ def compute_shap_values(
         "count": round(count_score, 2),
     }
 
+
+# =====================================
+# RESILIENCE TEST HELPERS
+# =====================================
+NSL_KDD_BOUNDARIES = {
+    "duration": {"min": 0.0, "max": 58329.0},
+    "src_bytes": {"min": 0.0, "max": 1379963888.0},
+    "dst_bytes": {"min": 0.0, "max": 1309937401.0},
+    "count": {"min": 0.0, "max": 511.0},
+}
+
+
+def _features_to_dict(data: PredictData) -> dict:
+    return {
+        "duration": float(data.duration),
+        "src_bytes": float(data.src_bytes),
+        "dst_bytes": float(data.dst_bytes),
+        "count": float(data.count),
+    }
+
+
+def _predict_feature_state(features: dict) -> dict:
+    input_df = pd.DataFrame([features], columns=FEATURES)
+    model_input = _prepare_model_input(input_df)
+    prediction = int(ml_model.predict(model_input)[0])
+    probabilities = ml_model.predict_proba(model_input)[0]
+    confidence = float(probabilities[prediction])
+
+    return {
+        "class_id": prediction,
+        "label": "Attack" if prediction == 1 else "Normal",
+        "confidence": round(confidence, 4),
+    }
+
+
+def _boundary_violations(features: dict) -> list:
+    violations = []
+
+    for feature, value in features.items():
+        bounds = NSL_KDD_BOUNDARIES[feature]
+
+        if value < bounds["min"] or value > bounds["max"]:
+            violations.append(feature)
+
+    return violations
+
+
+def _build_resilience_state(
+    track: str,
+    scenario: str,
+    features: dict,
+    baseline_prediction: dict,
+    distortion: str,
+) -> dict:
+    prediction = _predict_feature_state(features)
+    boundary_violations = _boundary_violations(features)
+    flipped = prediction["label"] != baseline_prediction["label"]
+
+    return {
+        "track": track,
+        "scenario": scenario,
+        "distortion": distortion,
+        "features": {
+            feature: round(float(value), 4)
+            for feature, value in features.items()
+        },
+        "prediction": prediction,
+        "flipped": flipped,
+        "resisted": not flipped,
+        "ood_flag": bool(boundary_violations),
+        "ood_features": boundary_violations,
+    }
+
 # =====================================
 # HOME
 # =====================================
@@ -683,6 +855,7 @@ def predict(
 @app.post("/predict/batch")
 async def predict_batch(
     file: UploadFile = File(...),
+    mapping: str = Form(None),
     authorization: str = Header(None)
 ):
 
@@ -734,68 +907,98 @@ async def predict_batch(
     # INTELLIGENT DYNAMIC CSV SCHEMA MAPPING
     # =====================================
     aliases = {
-        "duration": ["duration", "flow_duration", "flow duration", "connection_duration", "dur"],
-        "src_bytes": ["src_bytes", "source_bytes", "bytes_sent", "total_length_of_fwd_packets", "outbound_bytes"],
-        "dst_bytes": ["dst_bytes", "destination_bytes", "bytes_received", "total_length_of_bwd_packets", "inbound_bytes"],
-        "count": ["count", "packet_count", "connection_count", "flow_packets", "packets_per_second"]
+        "duration": ["duration", "duration_sec", "session_duration", "flow_duration", "flow duration", "connection_duration", "dur"],
+        "src_bytes": ["src_bytes", "source_bytes", "src bytes", "bytes_sent", "bytes sent", "total_length_of_fwd_packets", "outbound_bytes"],
+        "dst_bytes": ["dst_bytes", "destination_bytes", "dest_bytes", "bytes_received", "bytes received", "total_length_of_bwd_packets", "inbound_bytes"],
+        "count": ["count", "packet_count", "packet count", "connection_count", "flow_packets", "packets_per_second"],
     }
-    
-    mapping = {}
+
+    column_mapping = {}
     missing_features = []
     df_columns = list(df.columns)
-    
-    for feature, expected_aliases in aliases.items():
-        matched = False
-        
-        for col in df_columns:
-            if col not in mapping and col.lower() == feature.lower():
-                mapping[col] = feature
-                matched = True
-                break
-        
-        if matched: continue
-        
-        for alias in expected_aliases:
-            for col in df_columns:
-                if col not in mapping and col.lower() == alias.lower():
-                    mapping[col] = feature
-                    matched = True
-                    break
-            if matched: break
-            
-        if matched: continue
-        
-        for alias in expected_aliases:
-            for col in df_columns:
-                if col in mapping: continue
-                norm_col = col.lower().replace(" ", "").replace("_", "")
-                norm_alias = alias.lower().replace(" ", "").replace("_", "")
-                if len(norm_alias) >= 3 and norm_alias in norm_col:
-                    mapping[col] = feature
-                    matched = True
-                    break
-            if matched: break
-            
-        if not matched:
-            missing_features.append(feature)
 
-    if len(mapping) == 0:
+    if mapping:
+        try:
+            requested_mapping = json.loads(mapping)
+
+            if not isinstance(requested_mapping, dict):
+                raise ValueError("mapping must be an object")
+
+            for feature in FEATURES:
+                source_column = requested_mapping.get(feature)
+
+                if source_column and source_column in df_columns:
+                    column_mapping[source_column] = feature
+                else:
+                    missing_features.append(feature)
+
+        except Exception as error:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid mapping payload: {str(error)}",
+            )
+
+    if not column_mapping:
+        for feature, expected_aliases in aliases.items():
+            matched = False
+
+            for col in df_columns:
+                if col not in column_mapping and col.lower() == feature.lower():
+                    column_mapping[col] = feature
+                    matched = True
+                    break
+
+            if matched:
+                continue
+
+            for alias in expected_aliases:
+                for col in df_columns:
+                    if col not in column_mapping and col.lower() == alias.lower():
+                        column_mapping[col] = feature
+                        matched = True
+                        break
+                if matched:
+                    break
+
+            if matched:
+                continue
+
+            for alias in expected_aliases:
+                for col in df_columns:
+                    if col in column_mapping:
+                        continue
+                    norm_col = col.lower().replace(" ", "").replace("_", "")
+                    norm_alias = alias.lower().replace(" ", "").replace("_", "")
+                    if len(norm_alias) >= 3 and norm_alias in norm_col:
+                        column_mapping[col] = feature
+                        matched = True
+                        break
+                if matched:
+                    break
+
+            if not matched:
+                missing_features.append(feature)
+
+    if len(column_mapping) == 0:
         raise HTTPException(
             status_code=400,
             detail="No suitable mappings could be found for the required features. Please check your CSV format.",
         )
 
     print("Detected Mapping:")
-    for orig, standard in mapping.items():
+    for orig, standard in column_mapping.items():
         print(f"{orig} -> {standard}")
 
-    df = df.rename(columns=mapping)
-    
+    df = df.rename(columns=column_mapping)
+
     for missing_feature in missing_features:
         print(f"Warning: Missing feature '{missing_feature}'. Filling with default value 0.")
         df[missing_feature] = 0.0
 
     try:
+        for feature in FEATURES:
+            df[feature] = pd.to_numeric(df[feature], errors="coerce").fillna(0.0)
+
         input_df = df[FEATURES]
 
         predictions = ml_model.predict(input_df)
@@ -856,6 +1059,11 @@ async def predict_batch(
             "attack_count": attack_count,
             "attack_rate": attack_rate,
             "summary_mode": summary_mode,
+            "detected_mapping": {
+                standard: original
+                for original, standard in column_mapping.items()
+            },
+            "missing_features": missing_features,
             "results": results,
             "top_threats": top_threats,
             "severity_distribution": {
@@ -873,4 +1081,311 @@ async def predict_batch(
 
             detail=
             f"Batch prediction failed: {str(e)}",
+        )
+
+# =====================================
+# COMBINED XAI ENDPOINT (SHAP + LIME)
+# =====================================
+class CombinedExplainData(BaseModel):
+    duration: float
+    src_bytes: float
+    dst_bytes: float
+    count: float
+
+
+@app.post("/api/explain/combined")
+def explain_combined(
+    data: CombinedExplainData,
+    authorization: str = Header(None),
+):
+    verify_token(authorization)
+
+    if ml_model is None:
+        raise HTTPException(
+            status_code=500,
+            detail="ML model not loaded.",
+        )
+
+    try:
+        input_array = np.array([
+            [
+                data.duration,
+                data.src_bytes,
+                data.dst_bytes,
+                data.count,
+            ]
+        ], dtype=float)
+
+        # ---- SHAP heuristic values (existing logic) ----
+        shap_values = compute_shap_values(
+            data.duration,
+            data.src_bytes,
+            data.dst_bytes,
+            data.count,
+        )
+
+        # ---- LIME explanation ----
+        def _predict_fn(arr):
+            df = pd.DataFrame(arr, columns=_LIME_FEATURE_NAMES)
+            return ml_model.predict_proba(df)
+
+        lime_exp = lime_explainer.explain_instance(
+            data_row=input_array[0],
+            predict_fn=_predict_fn,
+            num_features=4,
+            num_samples=500,
+            top_labels=1,
+        )
+
+        # Extract LIME weights for the predicted class (Attack=1 / Normal=0)
+        pred_label_idx = int(
+            ml_model.predict(pd.DataFrame(
+                input_array, columns=_LIME_FEATURE_NAMES
+            ))[0]
+        )
+
+        # Fallback to class 0 if label not in explanation
+        available_labels = lime_exp.available_labels()
+        target_label = (
+            pred_label_idx
+            if pred_label_idx in available_labels
+            else available_labels[0]
+        )
+
+        lime_weights_raw = lime_exp.as_list(label=target_label)
+
+        # Map LIME condition strings back to the canonical feature names
+        lime_values: dict = {f: 0.0 for f in _LIME_FEATURE_NAMES}
+        for condition, weight in lime_weights_raw:
+            for feat in _LIME_FEATURE_NAMES:
+                if feat in condition.lower():
+                    lime_values[feat] = round(float(weight), 4)
+                    break
+
+        return {
+            "prediction": {
+                "label": "Attack" if pred_label_idx == 1 else "Normal",
+                "confidence": round(
+                    float(
+                        ml_model.predict_proba(
+                            pd.DataFrame(input_array, columns=_LIME_FEATURE_NAMES)
+                        )[0][pred_label_idx]
+                    ),
+                    4,
+                ),
+            },
+            "shap_values": shap_values,
+            "lime_values": lime_values,
+        }
+
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Combined explanation failed: {str(exc)}",
+        )
+
+
+# =====================================
+# MODEL RESILIENCE TESTING
+# =====================================
+@app.post("/api/test/resilience")
+def test_resilience(
+    data: PredictData,
+    authorization: str = Header(None),
+):
+    verify_token(authorization)
+
+    if ml_model is None:
+        raise HTTPException(
+            status_code=500,
+            detail="ML model not loaded.",
+        )
+
+    try:
+        baseline_features = _features_to_dict(data)
+        baseline_prediction = _predict_feature_state(baseline_features)
+        states = [
+            _build_resilience_state(
+                "Baseline",
+                "Original Input",
+                baseline_features,
+                baseline_prediction,
+                "No distortion",
+            )
+        ]
+
+        track_results = {
+            "Track A": True,
+            "Track B": True,
+            "Track C": True,
+        }
+
+        # Track A: Data poisoning stress through large feature scaling.
+        for factor in [15, 50]:
+            poisoned_features = baseline_features.copy()
+            poisoned_features["src_bytes"] *= factor
+            poisoned_features["count"] *= factor
+
+            state = _build_resilience_state(
+                "Track A",
+                f"Data Poisoning x{factor}",
+                poisoned_features,
+                baseline_prediction,
+                f"src_bytes and count scaled by {factor}x",
+            )
+
+            states.append(state)
+            track_results["Track A"] = track_results["Track A"] and not state["flipped"]
+
+        # Track B: Gradient-style evasion scan across every feature.
+        gradient_flip_found = False
+
+        for feature in FEATURES:
+            original_value = baseline_features[feature]
+            scale_base = abs(original_value) if original_value != 0 else 1.0
+
+            for direction in [-1, 1]:
+                direction_label = "negative" if direction < 0 else "positive"
+
+                for step in range(1, 51):
+                    shifted_features = baseline_features.copy()
+                    shifted_features[feature] = max(
+                        0.0,
+                        original_value + (direction * scale_base * step * 0.01),
+                    )
+
+                    state = _build_resilience_state(
+                        "Track B",
+                        f"{feature} {direction_label} shift {step}%",
+                        shifted_features,
+                        baseline_prediction,
+                        f"{feature} shifted {direction_label} by {step}%",
+                    )
+
+                    states.append(state)
+
+                    if state["flipped"]:
+                        gradient_flip_found = True
+
+        track_results["Track B"] = not gradient_flip_found
+
+        # Track C: OOD scaffolding against NSL-KDD feature boundaries.
+        ood_features = baseline_features.copy()
+        for feature, bounds in NSL_KDD_BOUNDARIES.items():
+            if baseline_features[feature] > bounds["max"]:
+                ood_features[feature] = bounds["max"] * 1.05
+            elif baseline_features[feature] < bounds["min"]:
+                ood_features[feature] = bounds["min"] - 1
+            else:
+                ood_features[feature] = baseline_features[feature]
+
+        ood_state = _build_resilience_state(
+            "Track C",
+            "OOD Boundary Scan",
+            ood_features,
+            baseline_prediction,
+            "Variance flag raised when inputs cross NSL-KDD boundaries",
+        )
+
+        states.append(ood_state)
+        track_results["Track C"] = not ood_state["flipped"]
+
+        stable_tracks = sum(1 for resisted in track_results.values() if resisted)
+        stability_index = round((stable_tracks / len(track_results)) * 100, 1)
+        evaluated_states = [state for state in states if state["track"] != "Baseline"]
+        flipped_states = [state for state in evaluated_states if state["flipped"]]
+        attack_success_rate = round(
+            (len(flipped_states) / len(evaluated_states)) * 100,
+            1,
+        ) if evaluated_states else 0.0
+        resistance_score = round(100 - attack_success_rate, 1)
+
+        feature_sensitivity = []
+        for feature in FEATURES:
+            feature_states = [
+                state for state in states
+                if state["track"] == "Track B"
+                and state["scenario"].startswith(feature)
+            ]
+            flipped_feature_states = [
+                state for state in feature_states
+                if state["flipped"]
+            ]
+            first_flip_step = None
+
+            for state in flipped_feature_states:
+                try:
+                    first_flip_step = min(
+                        first_flip_step or 1000,
+                        int(state["scenario"].split(" shift ")[1].replace("%", "")),
+                    )
+                except Exception:
+                    pass
+
+            feature_sensitivity.append({
+                "feature": feature,
+                "tested_states": len(feature_states),
+                "flip_count": len(flipped_feature_states),
+                "first_flip_step_percent": first_flip_step,
+                "sensitivity_score": round(
+                    (
+                        (len(flipped_feature_states) / len(feature_states)) * 70
+                        if feature_states
+                        else 0
+                    )
+                    + (
+                        ((51 - first_flip_step) / 50) * 30
+                        if first_flip_step
+                        else 0
+                    ),
+                    1,
+                ),
+            })
+
+        feature_sensitivity = sorted(
+            feature_sensitivity,
+            key=lambda item: item["sensitivity_score"],
+            reverse=True,
+        )
+
+        return {
+            "baseline": {
+                "features": baseline_features,
+                "prediction": baseline_prediction,
+            },
+            "model_stability_index": stability_index,
+            "attack_success_rate": attack_success_rate,
+            "resistance_score": resistance_score,
+            "feature_sensitivity_ranking": feature_sensitivity,
+            "easiest_feature_to_manipulate": (
+                feature_sensitivity[0]["feature"]
+                if feature_sensitivity
+                and feature_sensitivity[0]["sensitivity_score"] > 0
+                else "None detected"
+            ),
+            "track_summary": {
+                "data_poisoning_resisted": track_results["Track A"],
+                "gradient_evasion_resisted": track_results["Track B"],
+                "ood_scaffolding_resisted": track_results["Track C"],
+            },
+            "prediction_consistency": round(
+                (
+                    sum(1 for state in states if not state["flipped"])
+                    / len(states)
+                )
+                * 100,
+                1,
+            ),
+            "ood_distribution_status": (
+                "Out of Distribution"
+                if any(state["ood_flag"] for state in states)
+                else "Within NSL-KDD Boundaries"
+            ),
+            "states": states,
+        }
+
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Resilience test failed: {str(exc)}",
         )

@@ -2,6 +2,9 @@ const KEYS = {
   latest: "cyberxai_latest_prediction",
   csv: "cyberxai_csv_summary",
   logs: "cyberxai_attack_logs",
+  csvMappings: "cyberxai_csv_mappings",
+  xaiSummary: "cyberxai_xai_summary",
+  resilienceSummary: "cyberxai_resilience_summary",
 };
 
 // =======================
@@ -302,4 +305,108 @@ export const getThreatSeverityLabel = (confidence) => {
   if (level === "high") return "High";
   if (level === "medium") return "Medium";
   return "Low";
+};
+
+// =======================
+// CSV ADAPTATION MEMORY
+// =======================
+
+const getColumnSignature = (columns = []) => {
+  return columns
+    .map((column) => String(column).trim().toLowerCase())
+    .sort()
+    .join("|");
+};
+
+export const getCsvMappings = () => {
+  try {
+    return JSON.parse(
+      localStorage.getItem(KEYS.csvMappings) || "{}"
+    );
+  } catch {
+    return {};
+  }
+};
+
+export const getSavedCsvMapping = (columns = []) => {
+  const mappings = getCsvMappings();
+  return mappings[getColumnSignature(columns)] || null;
+};
+
+export const saveCsvMapping = (columns = [], mapping = {}) => {
+  const mappings = getCsvMappings();
+
+  mappings[getColumnSignature(columns)] = {
+    mapping,
+    columns,
+    savedAt: new Date().toISOString(),
+  };
+
+  localStorage.setItem(
+    KEYS.csvMappings,
+    JSON.stringify(mappings)
+  );
+};
+
+// =======================
+// ADVANCED REPORT SUMMARIES
+// =======================
+
+export const saveXaiSummary = (summary) => {
+  localStorage.setItem(
+    KEYS.xaiSummary,
+    JSON.stringify({
+      ...summary,
+      savedAt: new Date().toISOString(),
+    })
+  );
+};
+
+export const getXaiSummary = () => {
+  try {
+    return JSON.parse(
+      localStorage.getItem(KEYS.xaiSummary) || "null"
+    );
+  } catch {
+    return null;
+  }
+};
+
+export const saveResilienceSummary = (summary) => {
+  localStorage.setItem(
+    KEYS.resilienceSummary,
+    JSON.stringify({
+      ...summary,
+      savedAt: new Date().toISOString(),
+    })
+  );
+};
+
+export const getResilienceSummary = () => {
+  try {
+    return JSON.parse(
+      localStorage.getItem(KEYS.resilienceSummary) || "null"
+    );
+  } catch {
+    return null;
+  }
+};
+
+export const getSecurityScoreTrend = (limit = 8) => {
+  return getPredictionHistory()
+    .slice(0, limit)
+    .reverse()
+    .map((item, index) => {
+      const confidence = Number(item.confidence) || 0;
+      const attackPenalty =
+        item.label?.toLowerCase() === "attack" ? 20 : 0;
+
+      return {
+        label: item.timestamp || `Run ${index + 1}`,
+        score: Math.max(
+          0,
+          Math.min(100, Math.round((confidence * 100) - attackPenalty))
+        ),
+      };
+    });
 };

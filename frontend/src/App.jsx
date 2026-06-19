@@ -21,6 +21,8 @@ import Notifications from "./pages/Notifications";
 import ThreatVisualization from "./pages/ThreatVisualization";
 import SecurityCenter from "./pages/SecurityCenter";
 import AuditDashboard from "./pages/AuditDashboard";
+import XaiComparison from "./pages/XaiComparison";
+import ResilienceDashboard from "./pages/ResilienceDashboard";
 
 function App() {
   return (
@@ -59,10 +61,22 @@ function App() {
               path="threat-visualization"
               element={<ThreatVisualization />}
             />
-            </Route>
+
+            {/* Dual-XAI Benchmarking */}
+            <Route
+              path="xai-comparison"
+              element={<XaiComparison />}
+            />
 
             <Route path="audit-dashboard" element={<AuditDashboard />} />
-            </Route>
+
+            {/* Model Resilience Testing */}
+            <Route
+              path="resilience"
+              element={<ResilienceDashboard />}
+            />
+          </Route>
+        </Route>
 
         {/* ================= FALLBACK ================= */}
         <Route path="*" element={<Navigate to="/" replace />} />
