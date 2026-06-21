@@ -117,3 +117,80 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+/* ===================================
+   CyberXAI Manual Theme Support
+=================================== */
+
+[data-theme="light"] {
+  --text: #6b6375;
+  --text-h: #08060d;
+  --bg: #ffffff;
+  --border: #e5e4e7;
+  --code-bg: #f4f3ec;
+}
+
+[data-theme="dark"] {
+  --text: #9ca3af;
+  --text-h: #f3f4f6;
+  --bg: #16171d;
+  --border: #2e303a;
+  --code-bg: #1f2028;
+}
+
+.theme-toggle {
+  position: fixed;
+  top: 15px;
+  right: 20px;
+  z-index: 9999;
+
+  padding: 10px 16px;
+
+  border: none;
+  border-radius: 10px;
+
+  cursor: pointer;
+
+  background: var(--accent);
+  color: white;
+
+  font-weight: 600;
+}
+
+.theme-toggle:hover {
+  opacity: 0.9;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  transition: 0.3s ease;
+}
+
+:root {
+  --bg-color: #ffffff;
+  --text-color: #111827;
+  --card-color: #f8fafc;
+}
+
+[data-theme="dark"] {
+  --bg-color: #111827;
+  --text-color: #f9fafb;
+  --card-color: #1f2937;
+}
+
+body {
+  background: var(--bg-color);
+  color: var(--text-color);
+}
+
+.dashboard-app {
+  background: var(--bg-color);
+  color: var(--text-color);
+}
+
+.panel,
+.card,
+.result-box {
+  background: var(--card-color);
+}

@@ -780,17 +780,11 @@ def predict(
             }
         ])
 
-        prediction = (
-            ml_model.predict(
-                input_df
-            )[0]
-        )
+        model_input = _prepare_model_input(input_df)
 
-        probabilities = (
-            ml_model.predict_proba(
-                input_df
-            )[0]
-        )
+        prediction = ml_model.predict(model_input)[0]
+
+        probabilities = ml_model.predict_proba(model_input)[0]
 
         if prediction == 1:
 
@@ -1001,8 +995,10 @@ async def predict_batch(
 
         input_df = df[FEATURES]
 
-        predictions = ml_model.predict(input_df)
-        probabilities = ml_model.predict_proba(input_df)
+        model_input = _prepare_model_input(input_df)
+
+        predictions = ml_model.predict(model_input)
+        probabilities = ml_model.predict_proba(model_input)
 
         import numpy as np
         
@@ -1127,7 +1123,8 @@ def explain_combined(
         # ---- LIME explanation ----
         def _predict_fn(arr):
             df = pd.DataFrame(arr, columns=_LIME_FEATURE_NAMES)
-            return ml_model.predict_proba(df)
+            model_input = _prepare_model_input(df)
+            return ml_model.predict_proba(model_input)
 
         lime_exp = lime_explainer.explain_instance(
             data_row=input_array[0],
@@ -1138,10 +1135,15 @@ def explain_combined(
         )
 
         # Extract LIME weights for the predicted class (Attack=1 / Normal=0)
+        prediction_df = pd.DataFrame(
+            input_array,
+            columns=_LIME_FEATURE_NAMES
+        )
+
         pred_label_idx = int(
-            ml_model.predict(pd.DataFrame(
-                input_array, columns=_LIME_FEATURE_NAMES
-            ))[0]
+            ml_model.predict(
+                _prepare_model_input(prediction_df)
+            )[0]
         )
 
         # Fallback to class 0 if label not in explanation
@@ -1162,14 +1164,16 @@ def explain_combined(
                     lime_values[feat] = round(float(weight), 4)
                     break
 
+        prediction_proba = ml_model.predict_proba(
+            _prepare_model_input(prediction_df)
+        )
+
         return {
             "prediction": {
                 "label": "Attack" if pred_label_idx == 1 else "Normal",
                 "confidence": round(
                     float(
-                        ml_model.predict_proba(
-                            pd.DataFrame(input_array, columns=_LIME_FEATURE_NAMES)
-                        )[0][pred_label_idx]
+                        prediction_proba[0][pred_label_idx]
                     ),
                     4,
                 ),

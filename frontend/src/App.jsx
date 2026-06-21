@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ThemeProvider } from "./context/ThemeContext";
 
 // Auth Pages
 import Login from "./pages/Login";
@@ -9,7 +10,6 @@ import ProtectedRoute from "./utils/ProtectedRoute";
 
 // Layout
 import DashboardLayout from "./components/layout/DashboardLayout";
-
 
 // Dashboard Pages
 import DashboardHome from "./pages/DashboardHome";
@@ -26,62 +26,35 @@ import ResilienceDashboard from "./pages/ResilienceDashboard";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* ================= PUBLIC ROUTES ================= */}
-        <Route path="/" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+    <ThemeProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public Authentication Mapping */}
+          <Route path="/" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
 
-        {/* ================= PROTECTED ROUTES ================= */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            {/* Dashboard Overview */}
-            <Route index element={<DashboardHome />} />
-
-            {/* Model Performance */}
-            <Route path="model-metrics" element={<ModelMetrics />} />
-
-            {/* Security center */}
-            <Route path="security-center"element={<SecurityCenter />} />
-
-            {/* Single Prediction */}
-            <Route path="predict" element={<SinglePredict />} />
-
-            {/* Batch Prediction */}
-            <Route path="batch" element={<BatchUpload />} />
-
-            {/* Logs */}
-            <Route path="logs" element={<LogsPage />} />
-
-            {/* Security Notifications */}
-            <Route path="notifications" element={<Notifications />} />
-
-            {/* Threat Visualization */}
-            <Route
-              path="threat-visualization"
-              element={<ThreatVisualization />}
-            />
-
-            {/* Dual-XAI Benchmarking */}
-            <Route
-              path="xai-comparison"
-              element={<XaiComparison />}
-            />
-
-            <Route path="audit-dashboard" element={<AuditDashboard />} />
-
-            {/* Model Resilience Testing */}
-            <Route
-              path="resilience"
-              element={<ResilienceDashboard />}
-            />
+          {/* Protected Main Application Core */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/dashboard" element={<DashboardLayout />}>
+              <Route index element={<DashboardHome />} />
+              <Route path="model-metrics" element={<ModelMetrics />} />
+              <Route path="security-center" element={<SecurityCenter />} />
+              <Route path="predict" element={<SinglePredict />} />
+              <Route path="batch" element={<BatchUpload />} />
+              <Route path="logs" element={<LogsPage />} />
+              <Route path="notifications" element={<Notifications />} />
+              <Route path="threat-visualization" element={<ThreatVisualization />} />
+              <Route path="xai-comparison" element={<XaiComparison />} />
+              <Route path="audit-dashboard" element={<AuditDashboard />} />
+              <Route path="resilience" element={<ResilienceDashboard />} />
+            </Route>
           </Route>
-        </Route>
 
-        {/* ================= FALLBACK ================= */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Universal Fallback Redirection */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

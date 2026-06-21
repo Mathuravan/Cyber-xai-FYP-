@@ -1,21 +1,22 @@
 {
-    "accuracy": 0.7439673527324343,
-    "precision": 0.9242879461603173,
-    "recall": 0.5993142679030624,
-    "f1_score": 0.7271438025905266,
+    "accuracy": 0.7441447835344216,
+    "precision": 0.9243243243243243,
+    "recall": 0.5996259643107613,
+    "f1_score": 0.7273844408734285,
     "confusion_matrix": [
         [
             9081,
             630
         ],
         [
-            5142,
-            7691
+            5138,
+            7695
         ]
     ],
     "train_samples": 125973,
     "test_samples": 22544,
     "model_type": "Random Forest",
+    "estimators": 200,
     "selected_features": [
         "duration",
         "src_bytes",
