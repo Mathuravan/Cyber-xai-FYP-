@@ -1,66 +1,83 @@
-body{
-  margin:0;
-  font-family:Arial, Helvetica, sans-serif;
-  background:linear-gradient(135deg,#eef2ff,#f8fafc);
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: var(--cx-auth-gradient);
 }
 
-.auth-container{
-  height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
+.auth-container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.auth-card{
-  width:400px;
-  background:white;
-  padding:35px;
-  border-radius:16px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.1);
+.auth-card {
+  width: 400px;
+  background: var(--cx-auth-card);
+  padding: 35px;
+  border-radius: 16px;
+  box-shadow: var(--cx-shadow-lg);
+  border: 1px solid var(--cx-border);
+  color: var(--cx-text-primary);
 }
 
-.auth-title{
-  text-align:center;
-  font-size:28px;
-  font-weight:bold;
+.auth-title {
+  text-align: center;
+  font-size: 28px;
+  font-weight: bold;
+  color: var(--cx-text-heading);
 }
 
-.auth-subtitle{
-  text-align:center;
-  color:gray;
-  margin-bottom:20px;
+.auth-subtitle {
+  text-align: center;
+  color: var(--cx-auth-subtitle);
+  margin-bottom: 20px;
 }
 
-.input-group{
-  margin-bottom:15px;
+.input-group {
+  margin-bottom: 15px;
 }
 
-.input-group label{
-  display:block;
-  margin-bottom:5px;
+.input-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--cx-text-label);
 }
 
-.input-group input{
-  width:100%;
-  padding:10px;
-  border-radius:8px;
-  border:1px solid #ccc;
+.input-group input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--cx-border-subtle);
+  background: var(--cx-surface-input);
+  color: var(--cx-text-primary);
 }
 
-.auth-button{
-  width:100%;
-  padding:12px;
-  background:black;
-  color:white;
-  border:none;
-  border-radius:8px;
+.auth-button {
+  width: 100%;
+  padding: 12px;
+  background: var(--cx-text-heading);
+  color: var(--cx-bg);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
-.auth-footer{
-  text-align:center;
-  margin-top:15px;
+[data-theme="dark"] .auth-button {
+  background: var(--cx-accent-bright);
+  color: var(--cx-accent-text);
 }
 
-.error{
-  color:red;
+.auth-footer {
+  text-align: center;
+  margin-top: 15px;
+  color: var(--cx-text-muted);
+}
+
+.auth-footer a {
+  color: var(--cx-accent-bright);
+}
+
+.error {
+  color: #ef4444;
 }

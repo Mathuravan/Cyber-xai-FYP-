@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { login } from "../services/authService"
+import ThemeToggle from "../components/ThemeToggle"
 import "../styles/auth.css"
 
 export default function Login() {
@@ -33,6 +34,7 @@ export default function Login() {
   return (
 
     <div className="auth-container">
+      <ThemeToggle floating />
 
       <div className="auth-card">
 

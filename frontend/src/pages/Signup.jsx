@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { signup } from "../services/authService"
 import { Link } from "react-router-dom"
+import ThemeToggle from "../components/ThemeToggle"
 import "../styles/auth.css"
 
 export default function Signup() {
@@ -31,6 +32,7 @@ export default function Signup() {
   return (
 
     <div className="auth-container">
+      <ThemeToggle floating />
 
       <div className="auth-card">
 

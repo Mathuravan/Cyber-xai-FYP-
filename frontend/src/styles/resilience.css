@@ -14,10 +14,10 @@
   align-items: center;
   min-height: 28px;
   padding: 0 12px;
-  border: 1px solid rgba(0, 207, 255, 0.28);
+  border: 1px solid var(--cx-resilience-eyebrow-border);
   border-radius: 6px;
-  color: #67e8f9;
-  background: rgba(8, 47, 73, 0.45);
+  color: var(--cx-resilience-eyebrow-text);
+  background: var(--cx-resilience-eyebrow-bg);
   font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
@@ -25,7 +25,7 @@
 
 .resilience-header h1 {
   margin: 14px 0 10px;
-  color: #f8fafc;
+  color: var(--cx-text-heading);
   font-size: 34px;
   line-height: 1.1;
   letter-spacing: 0;
@@ -33,7 +33,7 @@
 
 .resilience-header p {
   max-width: 760px;
-  color: #94a3b8;
+  color: var(--cx-text-muted);
   font-size: 16px;
 }
 
@@ -46,9 +46,10 @@
 .resilience-metric {
   min-height: 132px;
   padding: 18px;
-  border: 1px solid rgba(148, 163, 184, 0.22);
+  border: 1px solid var(--cx-border-subtle);
   border-radius: 8px;
-  background: rgba(15, 23, 42, 0.92);
+  background: var(--cx-viz-card-bg);
+  box-shadow: var(--cx-shadow);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -56,13 +57,13 @@
 
 .resilience-metric span,
 .resilience-metric small {
-  color: #94a3b8;
+  color: var(--cx-text-muted);
   font-size: 13px;
   font-weight: 700;
 }
 
 .resilience-metric strong {
-  color: #f8fafc;
+  color: var(--cx-text-heading);
   font-size: 26px;
   line-height: 1.1;
   letter-spacing: 0;
@@ -74,7 +75,7 @@
 }
 
 .resilience-metric.ok strong {
-  color: #86efac;
+  color: var(--cx-metric-ok);
 }
 
 .resilience-metric.warn {
@@ -82,7 +83,7 @@
 }
 
 .resilience-metric.warn strong {
-  color: #fde68a;
+  color: var(--cx-metric-warn);
 }
 
 .resilience-metric.bad {
@@ -90,14 +91,15 @@
 }
 
 .resilience-metric.bad strong {
-  color: #fca5a5;
+  color: var(--cx-metric-bad);
 }
 
 .resilience-panel {
   padding: 22px;
-  border: 1px solid rgba(0, 207, 255, 0.2);
+  border: 1px solid var(--cx-viz-card-border);
   border-radius: 8px;
-  background: rgba(15, 23, 42, 0.82);
+  background: var(--cx-viz-card-bg);
+  box-shadow: var(--cx-shadow);
 }
 
 .resilience-panel-header {
@@ -110,14 +112,14 @@
 
 .resilience-panel h2 {
   margin: 0 0 6px;
-  color: #f8fafc;
+  color: var(--cx-text-heading);
   font-size: 22px;
   line-height: 1.2;
   letter-spacing: 0;
 }
 
 .resilience-panel p {
-  color: #94a3b8;
+  color: var(--cx-text-muted);
   font-size: 14px;
 }
 
@@ -139,14 +141,14 @@
 
 .resilience-presets button {
   padding: 0 14px;
-  background: rgba(30, 41, 59, 0.9);
-  color: #cbd5e1;
-  border: 1px solid rgba(148, 163, 184, 0.26);
+  background: var(--cx-resilience-preset-bg);
+  color: var(--cx-resilience-preset-text);
+  border: 1px solid var(--cx-resilience-preset-border);
 }
 
 .resilience-presets button:hover {
-  color: #f8fafc;
-  border-color: rgba(0, 207, 255, 0.45);
+  color: var(--cx-text-heading);
+  border-color: var(--cx-accent-border-strong);
 }
 
 .resilience-form {
@@ -165,7 +167,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  color: #cbd5e1;
+  color: var(--cx-text-label);
   font-size: 13px;
   font-weight: 800;
 }
@@ -174,25 +176,25 @@
   width: 100%;
   min-height: 46px;
   box-sizing: border-box;
-  border: 1px solid rgba(0, 207, 255, 0.28);
+  border: 1px solid var(--cx-border-subtle);
   border-radius: 6px;
   padding: 0 12px;
-  background: rgba(2, 6, 23, 0.72);
-  color: #f8fafc;
+  background: var(--cx-surface-input);
+  color: var(--cx-text-heading);
   font-size: 15px;
 }
 
 .resilience-field input:focus {
   outline: none;
-  border-color: rgba(0, 207, 255, 0.78);
-  box-shadow: 0 0 0 3px rgba(0, 207, 255, 0.12);
+  border-color: var(--cx-accent-border-strong);
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.12);
 }
 
 .resilience-submit {
   align-self: flex-start;
   padding: 0 20px;
-  background: #00cfff;
-  color: #082f49;
+  background: var(--cx-resilience-submit-bg);
+  color: var(--cx-resilience-submit-text);
 }
 
 .resilience-submit:disabled,
@@ -203,7 +205,7 @@
 
 .resilience-error {
   margin-top: 16px;
-  color: #fca5a5;
+  color: var(--cx-critical-label);
   font-weight: 700;
 }
 
@@ -211,9 +213,9 @@
   flex: 0 0 auto;
   padding: 8px 12px;
   border-radius: 6px;
-  background: rgba(8, 47, 73, 0.75);
-  color: #bae6fd;
-  border: 1px solid rgba(14, 165, 233, 0.35);
+  background: var(--cx-resilience-eyebrow-bg);
+  color: var(--cx-resilience-eyebrow-text);
+  border: 1px solid var(--cx-resilience-eyebrow-border);
   font-size: 13px;
   font-weight: 800;
 }
@@ -222,7 +224,7 @@
   width: 100%;
   max-height: 620px;
   overflow: auto;
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  border: 1px solid var(--cx-border-subtle);
   border-radius: 8px;
 }
 
@@ -231,7 +233,7 @@
   min-width: 1120px;
   border-collapse: collapse;
   text-align: left;
-  color: #dbeafe;
+  color: var(--cx-text-primary);
 }
 
 .resilience-table th {
@@ -239,17 +241,17 @@
   top: 0;
   z-index: 1;
   padding: 12px 14px;
-  background: #0f172a;
-  color: #93c5fd;
+  background: var(--cx-surface-muted);
+  color: var(--cx-text-muted);
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+  border-bottom: 1px solid var(--cx-border-subtle);
 }
 
 .resilience-table td {
   padding: 12px 14px;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.12);
+  border-bottom: 1px solid var(--cx-border);
   vertical-align: top;
   font-size: 13px;
 }
@@ -260,12 +262,12 @@
 }
 
 .resilience-table td span {
-  color: #64748b;
+  color: var(--cx-text-muted);
   margin-top: 2px;
 }
 
 .resilience-table small {
-  color: #64748b;
+  color: var(--cx-text-muted);
   font-weight: 800;
 }
 
@@ -320,9 +322,9 @@
 
 .resilience-sensitivity-card {
   min-height: 108px;
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  border: 1px solid var(--cx-border-subtle);
   border-radius: 8px;
-  background: rgba(2, 6, 23, 0.34);
+  background: var(--cx-viz-card-bg);
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -331,13 +333,13 @@
 
 .resilience-sensitivity-card span,
 .resilience-sensitivity-card small {
-  color: #94a3b8;
+  color: var(--cx-text-muted);
   font-size: 12px;
   font-weight: 800;
 }
 
 .resilience-sensitivity-card strong {
-  color: #f8fafc;
+  color: var(--cx-text-heading);
   font-size: 24px;
   line-height: 1.1;
   overflow-wrap: anywhere;
@@ -355,10 +357,10 @@
   gap: 12px;
   align-items: center;
   padding: 12px 14px;
-  border: 1px solid rgba(0, 207, 255, 0.16);
+  border: 1px solid var(--cx-viz-card-border);
   border-radius: 8px;
-  background: rgba(2, 6, 23, 0.36);
-  color: #cbd5e1;
+  background: var(--cx-viz-feed-bg);
+  color: var(--cx-text-secondary);
   font-size: 13px;
 }
 
@@ -369,29 +371,29 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 207, 255, 0.14);
-  color: #67e8f9;
+  background: var(--cx-resilience-eyebrow-bg);
+  color: var(--cx-resilience-eyebrow-text);
   font-weight: 900;
 }
 
 .resilience-ranking-row strong {
-  color: #f8fafc;
+  color: var(--cx-text-heading);
 }
 
 .resilience-ranking-row small {
-  color: #94a3b8;
+  color: var(--cx-text-muted);
   font-weight: 700;
 }
 
 .resilience-ranking-row b {
-  color: #f8fafc;
+  color: var(--cx-text-heading);
   text-align: right;
 }
 
 .resilience-ranking-bar {
   height: 10px;
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.18);
+  background: var(--cx-viz-bar-track);
   overflow: hidden;
 }
 

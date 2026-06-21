@@ -6,7 +6,9 @@ const ThemeContext = createContext();
 export function ThemeProvider({ children }) {
   // Read initial theme from localStorage, default to dark for security tools
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem("cyberxai_theme") || "dark";
+    const saved = localStorage.getItem("cyberxai_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", saved);
+    return saved;
   });
 
   // Sync theme changes with the HTML DOM attribute and localStorage
