@@ -22,9 +22,9 @@ export default function Signup() {
 
       navigate("/")
 
-    } catch {
+    } catch (err) {
 
-      setMessage("Signup failed")
+      setMessage(err.message || "Signup failed")
 
     }
 

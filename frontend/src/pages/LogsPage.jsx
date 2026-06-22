@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 import {
   getAttackLogs,
@@ -226,15 +226,11 @@ function exportLogsToCSV(logs) {
 }
 
 export default function LogsPage() {
-  const [logs, setLogs] = useState([])
+  const [logs, setLogs] = useState(() => getAttackLogs())
   const [searchQuery, setSearchQuery] = useState("")
   const [filterType, setFilterType] = useState("all")
   const [exportMessage, setExportMessage] = useState("")
   const [exportError, setExportError] = useState("")
-
-  useEffect(() => {
-    setLogs(getAttackLogs())
-  }, [])
 
   const filteredLogs = filterLogs(logs, searchQuery, filterType)
   const analytics = getLogAnalytics(filteredLogs)

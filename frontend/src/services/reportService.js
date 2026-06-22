@@ -26,9 +26,8 @@ export const generateExecutiveReport = () => {
   const filenameTime = new Date().toISOString().replace(/[:.]/g, "-");
 
   // Colors
-  const primaryColor = [15, 23, 42]; // dark blue
-  const secondaryColor = [99, 102, 241]; // indigo
-  const accentColor = [0, 207, 255]; // cyan
+  const primaryColor = [15, 23, 42];
+  const secondaryColor = [8, 145, 178];
   
   // Footer Function
   const addFooter = (doc) => {

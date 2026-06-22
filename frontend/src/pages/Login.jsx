@@ -18,14 +18,13 @@ export default function Login() {
 
     try {
 
-      const data = await login(username, password)
-
+      await login(username, password)
 
       navigate("/dashboard")
 
-    } catch {
+    } catch (err) {
 
-      setError("Invalid login credentials")
+      setError(err.message || "Invalid login credentials")
 
     }
 

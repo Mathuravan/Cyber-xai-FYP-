@@ -30,6 +30,7 @@ export function ThemeProvider({ children }) {
 }
 
 // Custom hook for clean component consumption
+// eslint-disable-next-line react-refresh/only-export-components
 export function useTheme() {
   const context = useContext(ThemeContext);
   if (!context) {
