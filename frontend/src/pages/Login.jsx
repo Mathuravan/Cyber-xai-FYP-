@@ -36,7 +36,14 @@ export default function Login() {
     <div className="auth-container">
       <ThemeToggle floating />
 
-      <div className="auth-card">
+      <div className="auth-shell">
+        <div className="auth-brand">
+          <span className="auth-brand-mark">CX</span>
+          <span className="auth-brand-name">CyberXAI</span>
+          <span className="auth-brand-tag">Intrusion Detection Platform</span>
+        </div>
+
+        <div className="auth-card">
 
         <h2 className="auth-title">
           Welcome Back
@@ -94,8 +101,8 @@ export default function Login() {
 
         </div>
 
+        </div>
       </div>
-
     </div>
 
   )

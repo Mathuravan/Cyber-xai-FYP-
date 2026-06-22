@@ -1,0 +1,398 @@
+/* =====================================================================
+   CyberXAI — Industrial SOC design system (shared components)
+   ===================================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap");
+
+/* ─── Page shell ───────────────────────────────────────────────────── */
+.dashboard-app,
+.auth-container {
+  font-family: var(--cx-font-sans);
+}
+
+.workspace-content {
+  max-width: var(--cx-content-max);
+  margin: 0 auto;
+  width: 100%;
+}
+
+.predict-page,
+.audit-dashboard-page,
+.notifications-page,
+.threat-viz-page,
+.resilience-page,
+.xai-page,
+.security-center-page,
+.metrics-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cx-space-6);
+}
+
+/* ─── Page header (topbar) ─────────────────────────────────────────── */
+.topbar {
+  padding-bottom: var(--cx-space-5);
+  margin-bottom: var(--cx-space-2);
+  border-bottom: 1px solid var(--cx-border);
+}
+
+.topbar h1 {
+  font-size: var(--cx-text-3xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--cx-space-2);
+  color: var(--cx-text-heading);
+  line-height: 1.15;
+}
+
+.topbar p {
+  color: var(--cx-text-muted);
+  margin-bottom: 0;
+  font-size: var(--cx-text-base);
+  line-height: 1.6;
+  max-width: 720px;
+}
+
+.logs-header.topbar,
+.notifications-header.topbar,
+.threat-viz-topbar {
+  align-items: flex-end;
+}
+
+/* ─── Cards & panels ───────────────────────────────────────────────── */
+.panel,
+.dashboard-panel {
+  background: var(--cx-panel-bg);
+  border: 1px solid var(--cx-border);
+  border-radius: var(--cx-radius-lg);
+  box-shadow: var(--cx-shadow);
+  padding: var(--cx-space-6);
+  margin-bottom: var(--cx-space-6);
+}
+
+.card {
+  border-radius: var(--cx-radius-lg);
+  border: 1px solid var(--cx-border);
+  box-shadow: var(--cx-shadow);
+  padding: var(--cx-space-5);
+}
+
+.card h3,
+.panel h2,
+.threat-stat-card h3,
+.audit-card h3,
+.resilience-metric span:first-child {
+  font-size: var(--cx-text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cx-text-muted);
+  line-height: 1.4;
+}
+
+.card-value,
+.audit-value,
+.threat-stat-card p,
+.stat-value {
+  font-family: var(--cx-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.page-title {
+  font-size: var(--cx-text-xl);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: var(--cx-space-2);
+  color: var(--cx-text-heading);
+}
+
+.page-subtitle {
+  color: var(--cx-text-muted);
+  margin-bottom: var(--cx-space-5);
+  font-size: var(--cx-text-sm);
+  line-height: 1.55;
+}
+
+/* ─── Buttons ──────────────────────────────────────────────────────── */
+.btn,
+.auth-button,
+.resilience-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 var(--cx-space-5);
+  border-radius: var(--cx-radius-md);
+  border: 1px solid transparent;
+  font-family: var(--cx-font-sans);
+  font-size: var(--cx-text-sm);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease,
+    box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.btn:hover:not(:disabled),
+.auth-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--cx-shadow);
+}
+
+.btn {
+  background: var(--cx-accent);
+  color: #ffffff;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--cx-accent-hover);
+}
+
+.btn:disabled {
+  transform: none;
+  box-shadow: none;
+}
+
+.secondary-btn {
+  background: var(--cx-secondary-bg);
+  color: var(--cx-secondary-text);
+  border-color: var(--cx-secondary-border);
+}
+
+.secondary-btn:hover:not(:disabled) {
+  background: var(--cx-secondary-hover);
+}
+
+.danger-btn,
+.btn-danger {
+  background: var(--cx-danger-bg);
+  color: var(--cx-danger-text);
+  border-color: var(--cx-danger-border);
+}
+
+.danger-btn:hover:not(:disabled),
+.btn-danger:hover:not(:disabled) {
+  background: var(--cx-danger-hover);
+}
+
+.theme-toggle-btn {
+  min-height: 38px;
+  padding: 0 var(--cx-space-4);
+  border-radius: var(--cx-radius-md);
+  font-family: var(--cx-font-sans);
+  font-size: var(--cx-text-sm);
+  font-weight: 600;
+}
+
+/* ─── Forms ──────────────────────────────────────────────────────────── */
+.form-group label,
+.input-group label,
+.resilience-field,
+.upload-form .form-group label {
+  font-size: var(--cx-text-sm);
+  font-weight: 600;
+  color: var(--cx-text-label);
+  margin-bottom: var(--cx-space-2);
+}
+
+.form-group input,
+.input-group input,
+.logs-search-input,
+.logs-filter-select,
+.resilience-field input,
+.file-input,
+.mapping-row select {
+  min-height: 42px;
+  border-radius: var(--cx-radius-md);
+  border: 1px solid var(--cx-border-subtle);
+  background: var(--cx-surface-input);
+  color: var(--cx-text-heading);
+  font-family: var(--cx-font-sans);
+  font-size: var(--cx-text-sm);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.form-group input:focus,
+.input-group input:focus,
+.logs-search-input:focus,
+.logs-filter-select:focus,
+.resilience-field input:focus,
+.file-input:focus,
+.mapping-row select:focus {
+  outline: none;
+  border-color: var(--cx-accent-border-strong);
+  box-shadow: 0 0 0 3px var(--cx-focus-ring);
+}
+
+/* ─── Tables ─────────────────────────────────────────────────────────── */
+.results-table,
+.logs-table,
+.trends-table,
+.audit-events-table,
+.resilience-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--cx-text-sm);
+}
+
+.results-table th,
+.logs-table th,
+.trends-table th,
+.audit-events-table th,
+.resilience-table th {
+  font-size: var(--cx-text-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cx-text-muted);
+  background: var(--cx-surface-muted);
+  border-bottom: 1px solid var(--cx-border);
+}
+
+.results-table td,
+.logs-table td,
+.trends-table td,
+.audit-events-table td,
+.resilience-table td {
+  color: var(--cx-text-secondary);
+  border-bottom: 1px solid var(--cx-border);
+}
+
+/* ─── Status & empty states ──────────────────────────────────────────── */
+.empty-state,
+.threat-viz-empty {
+  border-radius: var(--cx-radius-md);
+  font-size: var(--cx-text-sm);
+}
+
+.error-text,
+.error,
+.resilience-error {
+  color: var(--cx-danger-text);
+  font-size: var(--cx-text-sm);
+  font-weight: 600;
+}
+
+/* ─── Summary grids ──────────────────────────────────────────────────── */
+.summary-cards,
+.threat-stats-grid,
+.audit-summary-grid,
+.resilience-metrics {
+  gap: var(--cx-space-4);
+}
+
+.summary-cards .card,
+.threat-stat-card,
+.audit-card,
+.resilience-metric {
+  border-radius: var(--cx-radius-lg);
+  border: 1px solid var(--cx-border);
+  box-shadow: var(--cx-shadow);
+}
+
+/* ─── Security Center ──────────────────────────────────────────────── */
+.soc-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: var(--cx-text-sm);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  margin-bottom: var(--cx-space-4);
+}
+
+.soc-status-badge.secure {
+  color: var(--cx-stable-badge-text);
+  background: var(--cx-stable-badge-bg);
+  border: 1px solid var(--cx-stable-label);
+}
+
+.soc-status-badge.warning {
+  color: var(--cx-warning-badge-text);
+  background: var(--cx-warning-badge-bg);
+  border: 1px solid var(--cx-warning-label);
+}
+
+.soc-status-badge.critical {
+  color: var(--cx-critical-badge-text);
+  background: var(--cx-critical-badge-bg);
+  border: 1px solid var(--cx-critical-label);
+}
+
+.soc-detail-grid {
+  display: grid;
+  gap: var(--cx-space-3);
+}
+
+.soc-detail-grid p,
+.soc-metric-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--cx-space-4);
+  padding: var(--cx-space-3) 0;
+  border-bottom: 1px solid var(--cx-border);
+  margin: 0;
+  color: var(--cx-text-secondary);
+  font-size: var(--cx-text-sm);
+}
+
+.soc-detail-grid p:last-child,
+.soc-metric-line {
+  border-bottom: none;
+}
+
+.soc-detail-grid span,
+.soc-metric-line span {
+  color: var(--cx-text-muted);
+  font-weight: 600;
+}
+
+.soc-detail-grid strong,
+.soc-metric-line strong {
+  font-family: var(--cx-font-mono);
+  color: var(--cx-text-heading);
+  font-weight: 700;
+}
+
+.soc-score-value {
+  font-family: var(--cx-font-mono);
+  font-size: var(--cx-text-xl);
+  font-weight: 700;
+  color: var(--cx-text-heading);
+  margin: 0;
+}
+
+.soc-score-value span {
+  color: var(--cx-text-muted);
+  font-size: var(--cx-text-base);
+  font-weight: 600;
+}
+
+.soc-empty {
+  color: var(--cx-text-muted);
+  font-size: var(--cx-text-sm);
+}
+
+.soc-action-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: var(--cx-text-secondary);
+  font-size: var(--cx-text-sm);
+  line-height: 1.8;
+}
+
+.soc-action-list li {
+  margin-bottom: var(--cx-space-2);
+}
+
+.dashboard-panel h2 {
+  font-size: var(--cx-text-lg);
+  font-weight: 700;
+  color: var(--cx-text-heading);
+  margin-bottom: var(--cx-space-4);
+}
