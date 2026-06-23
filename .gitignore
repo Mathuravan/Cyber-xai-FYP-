@@ -15,3 +15,6 @@ data/NSL-KDD/
 
 # Logs / temp
 *.log
+
+# Local auth store
+backend/users.json

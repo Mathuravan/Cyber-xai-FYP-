@@ -1,6 +1,7 @@
 import { useState } from "react"
+import { Link, useNavigate } from "react-router-dom"
 import { signup } from "../services/authService"
-import { Link } from "react-router-dom"
+import ThemeToggle from "../components/ThemeToggle"
 import "../styles/auth.css"
 
 export default function Signup() {
@@ -9,6 +10,7 @@ export default function Signup() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [message, setMessage] = useState("")
+  const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
 
@@ -18,11 +20,11 @@ export default function Signup() {
 
       await signup(username, email, password)
 
-      setMessage("Account created successfully")
+      navigate("/")
 
-    } catch {
+    } catch (err) {
 
-      setMessage("Signup failed")
+      setMessage(err.message || "Signup failed")
 
     }
 
@@ -31,8 +33,16 @@ export default function Signup() {
   return (
 
     <div className="auth-container">
+      <ThemeToggle floating />
 
-      <div className="auth-card">
+      <div className="auth-shell">
+        <div className="auth-brand">
+          <span className="auth-brand-mark">CX</span>
+          <span className="auth-brand-name">CyberXAI</span>
+          <span className="auth-brand-tag">Intrusion Detection Platform</span>
+        </div>
+
+        <div className="auth-card">
 
         <h2 className="auth-title">
           Create Account
@@ -103,8 +113,8 @@ export default function Signup() {
 
         </div>
 
+        </div>
       </div>
-
     </div>
 
   )

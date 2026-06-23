@@ -43,11 +43,6 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 # =====================================
-# TEMP USER DATABASE
-# =====================================
-users_db = {}
-
-# =====================================
 # MODEL PATH
 # =====================================
 BASE_DIR = (
@@ -56,6 +51,39 @@ BASE_DIR = (
     .parent
     .parent
 )
+
+# =====================================
+# USER DATABASE
+# =====================================
+USERS_DB_PATH = (
+    BASE_DIR
+    / "backend"
+    / "users.json"
+)
+
+
+def _load_users_db() -> dict:
+    if not USERS_DB_PATH.exists():
+        return {}
+
+    try:
+        with open(USERS_DB_PATH, "r", encoding="utf-8") as file:
+            data = json.load(file)
+
+        return data if isinstance(data, dict) else {}
+    except Exception as error:
+        print(f"User database load failed: {error}")
+        return {}
+
+
+def _save_users_db() -> None:
+    USERS_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(USERS_DB_PATH, "w", encoding="utf-8") as file:
+        json.dump(users_db, file, indent=2)
+
+
+users_db = _load_users_db()
 
 LEGACY_MODEL_PATH = (
     BASE_DIR
@@ -692,6 +720,8 @@ def signup(data: SignupData):
         hashed_password,
     }
 
+    _save_users_db()
+
     return {
         "message":
         "Signup successful",
@@ -739,8 +769,10 @@ def login(data: LoginData):
     return {
         "token": token,
 
-        "user":
-        data.username,
+        "user": {
+            "username": user["username"],
+            "email": user.get("email", ""),
+        },
     }
 
 # =====================================
@@ -1243,33 +1275,97 @@ def test_resilience(
 
         # Track B: Gradient-style evasion scan across every feature.
         gradient_flip_found = False
+        feature_sensitivity = []
+        gradient_steps = 20
 
         for feature in FEATURES:
             original_value = baseline_features[feature]
             scale_base = abs(original_value) if original_value != 0 else 1.0
+            feature_flip_count = 0
+            feature_tested = 0
+            first_flip_step = None
 
             for direction in [-1, 1]:
                 direction_label = "negative" if direction < 0 else "positive"
+                batch_rows = []
+                step_numbers = []
 
-                for step in range(1, 51):
+                for step in range(1, gradient_steps + 1):
                     shifted_features = baseline_features.copy()
                     shifted_features[feature] = max(
                         0.0,
                         original_value + (direction * scale_base * step * 0.01),
                     )
+                    batch_rows.append([shifted_features[name] for name in FEATURES])
+                    step_numbers.append(step)
 
-                    state = _build_resilience_state(
-                        "Track B",
-                        f"{feature} {direction_label} shift {step}%",
-                        shifted_features,
-                        baseline_prediction,
-                        f"{feature} shifted {direction_label} by {step}%",
-                    )
+                batch_df = pd.DataFrame(batch_rows, columns=FEATURES)
+                batch_input = _prepare_model_input(batch_df)
+                batch_predictions = ml_model.predict(batch_input)
+                batch_probabilities = ml_model.predict_proba(batch_input)
 
-                    states.append(state)
+                for index, step in enumerate(step_numbers):
+                    shifted_features = {
+                        name: float(batch_rows[index][feature_index])
+                        for feature_index, name in enumerate(FEATURES)
+                    }
+                    class_id = int(batch_predictions[index])
+                    confidence = float(batch_probabilities[index][class_id])
+                    prediction = {
+                        "class_id": class_id,
+                        "label": "Attack" if class_id == 1 else "Normal",
+                        "confidence": round(confidence, 4),
+                    }
+                    boundary_violations = _boundary_violations(shifted_features)
+                    flipped = prediction["label"] != baseline_prediction["label"]
+                    feature_tested += 1
 
-                    if state["flipped"]:
+                    state = {
+                        "track": "Track B",
+                        "scenario": f"{feature} {direction_label} shift {step}%",
+                        "distortion": f"{feature} shifted {direction_label} by {step}%",
+                        "features": {
+                            name: round(float(value), 4)
+                            for name, value in shifted_features.items()
+                        },
+                        "prediction": prediction,
+                        "flipped": flipped,
+                        "resisted": not flipped,
+                        "ood_flag": bool(boundary_violations),
+                        "ood_features": boundary_violations,
+                    }
+
+                    if step == 1 or flipped or step == gradient_steps:
+                        states.append(state)
+
+                    if flipped:
                         gradient_flip_found = True
+                        feature_flip_count += 1
+                        first_flip_step = min(
+                            first_flip_step or step,
+                            step,
+                        )
+                        break
+
+            feature_sensitivity.append({
+                "feature": feature,
+                "tested_states": feature_tested,
+                "flip_count": feature_flip_count,
+                "first_flip_step_percent": first_flip_step,
+                "sensitivity_score": round(
+                    (
+                        (feature_flip_count / feature_tested) * 70
+                        if feature_tested
+                        else 0
+                    )
+                    + (
+                        ((gradient_steps - first_flip_step) / gradient_steps) * 30
+                        if first_flip_step
+                        else 0
+                    ),
+                    1,
+                ),
+            })
 
         track_results["Track B"] = not gradient_flip_found
 
@@ -1303,48 +1399,6 @@ def test_resilience(
             1,
         ) if evaluated_states else 0.0
         resistance_score = round(100 - attack_success_rate, 1)
-
-        feature_sensitivity = []
-        for feature in FEATURES:
-            feature_states = [
-                state for state in states
-                if state["track"] == "Track B"
-                and state["scenario"].startswith(feature)
-            ]
-            flipped_feature_states = [
-                state for state in feature_states
-                if state["flipped"]
-            ]
-            first_flip_step = None
-
-            for state in flipped_feature_states:
-                try:
-                    first_flip_step = min(
-                        first_flip_step or 1000,
-                        int(state["scenario"].split(" shift ")[1].replace("%", "")),
-                    )
-                except Exception:
-                    pass
-
-            feature_sensitivity.append({
-                "feature": feature,
-                "tested_states": len(feature_states),
-                "flip_count": len(flipped_feature_states),
-                "first_flip_step_percent": first_flip_step,
-                "sensitivity_score": round(
-                    (
-                        (len(flipped_feature_states) / len(feature_states)) * 70
-                        if feature_states
-                        else 0
-                    )
-                    + (
-                        ((51 - first_flip_step) / 50) * 30
-                        if first_flip_step
-                        else 0
-                    ),
-                    1,
-                ),
-            })
 
         feature_sensitivity = sorted(
             feature_sensitivity,

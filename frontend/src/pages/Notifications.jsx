@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 
 import {
   getAttackLogs,
@@ -51,7 +51,7 @@ function formatConfidence(confidence) {
 }
 
 function mapLogsToNotifications(logs, readStatus) {
-  return logs.map((log, index) => {
+  return logs.map((log) => {
     const id = createNotificationId(log)
     const severity = getThreatSeverityLabel(log.confidence)
 
@@ -122,15 +122,10 @@ function filterNotifications(notifications, activeFilter, searchQuery) {
 }
 
 export default function Notifications() {
-  const [logs, setLogs] = useState([])
-  const [readStatus, setReadStatus] = useState({})
+  const [logs] = useState(() => getAttackLogs())
+  const [readStatus, setReadStatus] = useState(() => getStoredReadStatus())
   const [activeFilter, setActiveFilter] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
-
-  useEffect(() => {
-    setLogs(getAttackLogs())
-    setReadStatus(getStoredReadStatus())
-  }, [])
 
   const notifications = useMemo(
     () => mapLogsToNotifications(logs, readStatus),

@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { login } from "../services/authService"
+import ThemeToggle from "../components/ThemeToggle"
 import "../styles/auth.css"
 
 export default function Login() {
@@ -17,14 +18,13 @@ export default function Login() {
 
     try {
 
-      const data = await login(username, password)
-
+      await login(username, password)
 
       navigate("/dashboard")
 
-    } catch {
+    } catch (err) {
 
-      setError("Invalid login credentials")
+      setError(err.message || "Invalid login credentials")
 
     }
 
@@ -33,8 +33,16 @@ export default function Login() {
   return (
 
     <div className="auth-container">
+      <ThemeToggle floating />
 
-      <div className="auth-card">
+      <div className="auth-shell">
+        <div className="auth-brand">
+          <span className="auth-brand-mark">CX</span>
+          <span className="auth-brand-name">CyberXAI</span>
+          <span className="auth-brand-tag">Intrusion Detection Platform</span>
+        </div>
+
+        <div className="auth-card">
 
         <h2 className="auth-title">
           Welcome Back
@@ -92,8 +100,8 @@ export default function Login() {
 
         </div>
 
+        </div>
       </div>
-
     </div>
 
   )

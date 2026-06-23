@@ -63,7 +63,10 @@ export default function ResilienceDashboard() {
   const [error, setError] = useState("")
 
   const baseline = result?.baseline
-  const states = result?.states || []
+  const states = useMemo(
+    () => result?.states || [],
+    [result]
+  )
 
   const boundaryCount = useMemo(() => {
     if (!states.length) {

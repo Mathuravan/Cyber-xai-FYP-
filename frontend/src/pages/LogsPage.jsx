@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 import {
   getAttackLogs,
@@ -226,15 +226,11 @@ function exportLogsToCSV(logs) {
 }
 
 export default function LogsPage() {
-  const [logs, setLogs] = useState([])
+  const [logs, setLogs] = useState(() => getAttackLogs())
   const [searchQuery, setSearchQuery] = useState("")
   const [filterType, setFilterType] = useState("all")
   const [exportMessage, setExportMessage] = useState("")
   const [exportError, setExportError] = useState("")
-
-  useEffect(() => {
-    setLogs(getAttackLogs())
-  }, [])
 
   const filteredLogs = filterLogs(logs, searchQuery, filterType)
   const analytics = getLogAnalytics(filteredLogs)
@@ -317,10 +313,9 @@ export default function LogsPage() {
 
           <button
             type="button"
-            className="btn logs-export-btn"
+            className="btn logs-export-btn logs-export-btn-pdf"
             onClick={generateExecutiveReport}
             disabled={logs.length === 0}
-            style={{ background: "linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 0.95))", borderColor: "rgba(248, 113, 113, 0.5)" }}
           >
             Export PDF Report
           </button>

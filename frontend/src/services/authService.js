@@ -4,21 +4,21 @@ export const API_BASE = "http://127.0.0.1:8000";
 // HANDLE API ERRORS
 // =======================
 async function handleResponseError(res) {
+  let message = "Request failed";
+
   try {
     const data = await res.json();
 
-    throw new Error(
-      data.detail || "Request failed"
-    );
-  } catch (err) {
-    if (err.message) {
-      throw err;
+    if (typeof data.detail === "string") {
+      message = data.detail;
+    } else if (Array.isArray(data.detail)) {
+      message = data.detail.map((item) => item.msg).join(", ");
     }
-
-    throw new Error(
-      "Request failed"
-    );
+  } catch {
+    // Keep default message when the body is not JSON.
   }
+
+  throw new Error(message);
 }
 
 // =======================
