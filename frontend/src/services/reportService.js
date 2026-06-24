@@ -174,7 +174,7 @@ Based on the recent network traffic analysis, CyberXAI recommends the following 
 2. Firewall Hardening: If attack rate is elevated, enforce stricter ingress/egress filtering rules.
 3. Feature Monitoring: Pay close attention to connections with high 'count' or anomalous 'duration' 
    as these features strongly correlate with active intrusions in the current model.
-4. Continuous Audit: Keep monitoring the live dashboard to ensure defenses remain resilient.
+4. Continuous Audit: Keep monitoring the prototype monitoring view to ensure defenses remain resilient.
 `;
 
   doc.text(recommendationsText, 14, currentY, { maxWidth: 180 });

@@ -307,7 +307,7 @@ export default function ThreatVisualization() {
         <div className="threat-viz-refresh">
           <span className="live-indicator-dot" />
           <div>
-            <strong>Live refresh</strong>
+            <strong>Dashboard refresh</strong>
             <span>{lastUpdated.toLocaleTimeString()}</span>
           </div>
         </div>
@@ -405,7 +405,7 @@ export default function ThreatVisualization() {
         <section className="panel dashboard-panel threat-viz-panel live-feed-panel">
           <div className="threat-viz-panel-header">
             <div>
-              <h2 className="page-title">Live Threat Feed</h2>
+              <h2 className="page-title">Prototype Threat Feed</h2>
               <p className="page-subtitle">
                 Latest 10 threats, refreshed every 5 seconds.
               </p>
@@ -414,7 +414,7 @@ export default function ThreatVisualization() {
 
           {liveThreats.length === 0 ? (
             <div className="threat-viz-empty">
-              No live threats available.
+              No stored threats available.
             </div>
           ) : (
             <ul className="threat-feed-list">

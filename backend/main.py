@@ -18,6 +18,7 @@ import numpy as np
 import joblib
 import hashlib
 import jwt
+import sqlite3
 
 from datetime import (
     datetime,
@@ -84,6 +85,132 @@ def _save_users_db() -> None:
 
 
 users_db = _load_users_db()
+
+LOGS_DB_PATH = (
+    BASE_DIR
+    / "backend"
+    / "cyberxai_logs.db"
+)
+
+
+def _init_logs_db() -> None:
+    try:
+        with sqlite3.connect(LOGS_DB_PATH) as connection:
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS prediction_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT,
+                    input_json TEXT,
+                    prediction TEXT,
+                    confidence REAL,
+                    threat_level TEXT,
+                    attack_type TEXT
+                )
+                """
+            )
+    except Exception as error:
+        print(f"Prediction log database init failed: {error}")
+
+
+def _save_prediction_log(
+    input_payload: dict,
+    prediction: str,
+    confidence: float,
+    threat_level: str,
+    attack_type: str,
+) -> None:
+    try:
+        with sqlite3.connect(LOGS_DB_PATH) as connection:
+            connection.execute(
+                """
+                INSERT INTO prediction_logs (
+                    timestamp,
+                    input_json,
+                    prediction,
+                    confidence,
+                    threat_level,
+                    attack_type
+                )
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    datetime.utcnow().isoformat(timespec="seconds") + "Z",
+                    json.dumps(input_payload),
+                    prediction,
+                    float(confidence),
+                    threat_level,
+                    attack_type,
+                ),
+            )
+    except Exception as error:
+        print(f"Prediction logging failed: {error}")
+
+
+def _fetch_prediction_logs(
+    page: int,
+    limit: int,
+    threat_type: str = None,
+    severity: str = None,
+) -> dict:
+    page = max(int(page), 1)
+    limit = min(max(int(limit), 1), 100)
+    offset = (page - 1) * limit
+
+    where_clauses = []
+    params = []
+
+    if threat_type:
+        where_clauses.append(
+            "(LOWER(prediction) = LOWER(?) OR LOWER(attack_type) = LOWER(?))"
+        )
+        params.extend([threat_type, threat_type])
+
+    if severity:
+        where_clauses.append("LOWER(threat_level) = LOWER(?)")
+        params.append(severity)
+
+    where_sql = (
+        f"WHERE {' AND '.join(where_clauses)}"
+        if where_clauses
+        else ""
+    )
+
+    with sqlite3.connect(LOGS_DB_PATH) as connection:
+        connection.row_factory = sqlite3.Row
+
+        total = connection.execute(
+            f"SELECT COUNT(*) FROM prediction_logs {where_sql}",
+            params,
+        ).fetchone()[0]
+
+        rows = connection.execute(
+            f"""
+            SELECT
+                id,
+                timestamp,
+                input_json,
+                prediction,
+                confidence,
+                threat_level,
+                attack_type
+            FROM prediction_logs
+            {where_sql}
+            ORDER BY id DESC
+            LIMIT ? OFFSET ?
+            """,
+            [*params, limit, offset],
+        ).fetchall()
+
+    return {
+        "logs": [dict(row) for row in rows],
+        "page": page,
+        "limit": limit,
+        "total": total,
+    }
+
+
+_init_logs_db()
 
 LEGACY_MODEL_PATH = (
     BASE_DIR
@@ -849,7 +976,7 @@ def predict(
             data.count,
         )
 
-        return {
+        response = {
             "label":
             label,
 
@@ -866,6 +993,16 @@ def predict(
             shap_values,
         }
 
+        _save_prediction_log(
+            _features_to_dict(data),
+            response["label"],
+            response["confidence"],
+            response["threat_level"],
+            response["label"],
+        )
+
+        return response
+
     except Exception as e:
 
         raise HTTPException(
@@ -873,6 +1010,29 @@ def predict(
 
             detail=
             f"Prediction failed: {str(e)}",
+        )
+
+# =====================================
+# PREDICTION LOGS
+# =====================================
+@app.get("/api/logs")
+def api_logs(
+    page: int = 1,
+    limit: int = 20,
+    threat_type: str = None,
+    severity: str = None,
+):
+    try:
+        return _fetch_prediction_logs(
+            page,
+            limit,
+            threat_type,
+            severity,
+        )
+    except Exception as error:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Could not load prediction logs: {str(error)}",
         )
 
 # =====================================

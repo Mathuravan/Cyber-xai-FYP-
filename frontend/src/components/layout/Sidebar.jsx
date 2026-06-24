@@ -6,7 +6,7 @@ const MENU_ITEMS = [
   {
     to: "/dashboard",
     label: "Overview",
-    desc: "System health & live stats",
+    desc: "System health & dashboard stats",
     icon: "O",
     end: true,
   },
@@ -37,7 +37,7 @@ const MENU_ITEMS = [
   {
     to: "/dashboard/notifications",
     label: "Security Notifications",
-    desc: "Real-time threat alerts",
+    desc: "Dashboard threat alerts",
     icon: "N",
   },
   {

@@ -131,9 +131,9 @@ function generateSecurityRecommendations({
       priority: "P2",
       title: "Increase monitoring frequency",
       description:
-        "Frequent attack activity detected. Enable real-time log analysis and shorten alert intervals.",
+        "Frequent attack activity detected. Use batch-based threat analysis and shorten alert intervals.",
     })
-    checklist.push("Reduce monitoring interval to near real-time")
+    checklist.push("Reduce dashboard monitoring interval")
     checklist.push("Enable automated alert notifications for SOC team")
   }
 
@@ -309,7 +309,7 @@ export default function DashboardHome() {
         <div>
           <h1>Security Dashboard</h1>
           <p>
-            Real-time NSL-KDD intrusion monitoring and analytics.
+            Dashboard monitoring for NSL-KDD intrusion analytics.
           </p>
         </div>
 
@@ -333,7 +333,7 @@ export default function DashboardHome() {
       >
         <div className="live-monitoring-header">
           <div>
-            <h2 className="page-title">Live Threat Monitoring</h2>
+            <h2 className="page-title">Prototype Monitoring View</h2>
             <p className="page-subtitle">
               Auto-refreshes every 5 seconds from local detection data.
             </p>
@@ -345,13 +345,13 @@ export default function DashboardHome() {
             }`}
           >
             <span className="live-indicator-dot" />
-            <span>Live</span>
+            <span>Dashboard</span>
           </div>
         </div>
 
         <div className="monitoring-widgets-grid">
           <div className={`monitor-card live-status-card ${liveStatus.className}`}>
-            <h3>Live Threat Status</h3>
+            <h3>Dashboard Threat Status</h3>
             <p className="monitor-value">{liveStatus.label}</p>
             <p className="monitor-meta">
               {isHighAlert
@@ -472,7 +472,7 @@ export default function DashboardHome() {
           <div>
             <h2 className="page-title">AI Security Recommendations</h2>
             <p className="page-subtitle">
-              Dynamic defensive guidance based on live threat analytics.
+              Dynamic defensive guidance based on dashboard threat analytics.
               Refreshes every 5 seconds.
             </p>
           </div>
@@ -564,7 +564,7 @@ export default function DashboardHome() {
       <div className="panel dashboard-panel threat-trend-panel" data-refresh={refreshTick}>
         <div className="threat-trend-header">
           <h2 className="page-title">Threat Trend Analytics</h2>
-          <p className="page-subtitle">Real-time analysis of attack vectors and prediction trends.</p>
+          <p className="page-subtitle">Batch-based threat analysis of attack vectors and prediction trends.</p>
         </div>
 
         {/* Analytics Insights */}

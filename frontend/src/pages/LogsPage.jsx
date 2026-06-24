@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import {
   getAttackLogs,
@@ -6,6 +6,7 @@ import {
 } from "../services/storageService"
 
 import { generateExecutiveReport } from "../services/reportService"
+import { API_BASE, getToken } from "../services/authService"
 
 const FILTER_OPTIONS = [
   { value: "all", label: "All Logs" },
@@ -15,8 +16,13 @@ const FILTER_OPTIONS = [
 ]
 
 const EXPORT_FILENAME = "cyberxai_threat_report.csv"
+const BACKEND_LOG_LIMIT = 100
 
-function getSeverity(confidence) {
+function getSeverity(confidence, label = "") {
+  if (label.toLowerCase() === "normal") {
+    return { label: "Low", className: "low" }
+  }
+
   const value = Number(confidence) || 0
 
   if (value >= 0.9) {
@@ -76,7 +82,8 @@ function filterLogs(logs, searchQuery, filterType) {
 
 function getLogAnalytics(logs) {
   const criticalCount = logs.filter(
-    (log) => Number(log.confidence) >= 0.9
+    (log) =>
+      getSeverity(log.confidence, log.label).label === "Critical"
   ).length
 
   const attackCount = logs.filter(
@@ -128,7 +135,7 @@ function generateThreatReport(logs) {
   const severityCounts = {}
 
   logs.forEach((log) => {
-    const severityLabel = getSeverity(log.confidence).label
+    const severityLabel = getSeverity(log.confidence, log.label).label
     severityCounts[severityLabel] =
       (severityCounts[severityLabel] || 0) + 1
   })
@@ -194,7 +201,7 @@ function exportLogsToCSV(logs) {
   ]
 
   const dataRows = logs.map((log) => {
-    const severity = getSeverity(log.confidence)
+    const severity = getSeverity(log.confidence, log.label)
 
     return [
       log.timestamp,
@@ -225,12 +232,81 @@ function exportLogsToCSV(logs) {
   return true
 }
 
+function parseInputJson(value) {
+  if (!value) {
+    return null
+  }
+
+  try {
+    return JSON.parse(value)
+  } catch {
+    return null
+  }
+}
+
+function mapBackendLog(log) {
+  return {
+    id: log.id,
+    timestamp: log.timestamp || "",
+    label: log.prediction || log.attack_type || "Unknown",
+    confidence: Number(log.confidence) || 0,
+    threatLevel: log.threat_level || "",
+    attackType: log.attack_type || "",
+    source: "Backend prediction log",
+    features: parseInputJson(log.input_json),
+  }
+}
+
+async function fetchBackendLogs() {
+  const token = getToken()
+  const headers = token
+    ? { Authorization: `Bearer ${token}` }
+    : undefined
+
+  const response = await fetch(
+    `${API_BASE}/api/logs?limit=${BACKEND_LOG_LIMIT}`,
+    { headers }
+  )
+
+  if (!response.ok) {
+    throw new Error("Backend logs request failed")
+  }
+
+  const data = await response.json()
+
+  if (!data || !Array.isArray(data.logs)) {
+    throw new Error("Unexpected backend logs response")
+  }
+
+  return data.logs.map(mapBackendLog)
+}
+
 export default function LogsPage() {
   const [logs, setLogs] = useState(() => getAttackLogs())
   const [searchQuery, setSearchQuery] = useState("")
   const [filterType, setFilterType] = useState("all")
   const [exportMessage, setExportMessage] = useState("")
   const [exportError, setExportError] = useState("")
+
+  useEffect(() => {
+    let isMounted = true
+
+    fetchBackendLogs()
+      .then((backendLogs) => {
+        if (isMounted) {
+          setLogs(backendLogs)
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setLogs(getAttackLogs())
+        }
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const filteredLogs = filterLogs(logs, searchQuery, filterType)
   const analytics = getLogAnalytics(filteredLogs)
@@ -366,7 +442,7 @@ export default function LogsPage() {
         <div className="panel dashboard-panel threat-report-panel">
           <h2 className="page-title">Threat Report Summary</h2>
           <p className="page-subtitle">
-            Live statistics for the currently filtered log view.
+            Dashboard statistics for the currently filtered log view.
             Generated {threatReport.generatedAt}
           </p>
 
@@ -498,7 +574,10 @@ export default function LogsPage() {
 
               <tbody>
                 {filteredLogs.map((log, index) => {
-                  const severity = getSeverity(log.confidence)
+                  const severity = getSeverity(
+                    log.confidence,
+                    log.label
+                  )
                   const labelClass = (log.label || "").toLowerCase()
                   const isCritical = severity.className === "critical"
 

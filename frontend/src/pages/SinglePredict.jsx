@@ -302,6 +302,13 @@ export default function SinglePredict() {
           Enter traffic values and run a prediction.
         </p>
 
+        <p className="page-subtitle">
+          Selected NSL-KDD Feature Prediction Prototype
+          <br />
+          This prototype uses selected numerical NSL-KDD features:
+          duration, src_bytes, dst_bytes, and count.
+        </p>
+
         <div className="example-buttons">
           <button
             type="button"
