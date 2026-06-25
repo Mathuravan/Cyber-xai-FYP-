@@ -3,7 +3,7 @@ export default function AttackLogsPanel({ logs }) {
     return (
       <div className="panel dashboard-panel">
         <div className="logs-header">
-          <h2 className="page-title">Attack logs</h2>
+          <h2 className="page-title">Prediction logs</h2>
         </div>
         <p className="page-subtitle">No logs yet.</p>
       </div>
@@ -13,7 +13,7 @@ export default function AttackLogsPanel({ logs }) {
   return (
     <div className="panel dashboard-panel">
       <div className="logs-header">
-        <h2 className="page-title">Attack logs</h2>
+        <h2 className="page-title">Prediction logs</h2>
         <p className="page-subtitle">{logs.length} recent entries</p>
       </div>
 

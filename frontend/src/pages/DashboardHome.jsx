@@ -163,7 +163,7 @@ function generateSecurityRecommendations({
         "Environment appears stable. Continue routine monitoring and keep detection models updated.",
     })
     checklist.push("Continue scheduled vulnerability scans")
-    checklist.push("Review attack logs weekly for emerging patterns")
+    checklist.push("Review prediction logs weekly for emerging patterns")
   } else if (
     recommendations.every((item) => item.level !== "stable") &&
     rate < 15 &&
@@ -213,7 +213,7 @@ function generateSecurityRecommendations({
     riskSummary = `Monitoring indicates elevated risk with ${activeThreats} active threat(s) and ${rate}% attack rate. Review priority recommendations below.`
   } else if (activeThreats === 0) {
     riskSummary =
-      "No active threats in local logs. Network posture is stable — maintain current monitoring and preventive controls."
+      "No active threats in prediction logs. Network posture is stable — maintain current monitoring and preventive controls."
   } else {
     riskSummary = `Low-level activity detected (${activeThreats} logged threat(s)). Continue monitoring and apply suggested hardening steps.`
   }
@@ -228,7 +228,7 @@ function generateSecurityRecommendations({
   })
 
   if (checklist.length === 0) {
-    checklist.push("Review latest threat logs in the Attack Logs page")
+    checklist.push("Review latest threat logs in the Logs page")
     checklist.push("Run batch CSV analysis for bulk traffic screening")
   }
 
@@ -335,7 +335,7 @@ export default function DashboardHome() {
           <div>
             <h2 className="page-title">Prototype Monitoring View</h2>
             <p className="page-subtitle">
-              Auto-refreshes every 5 seconds from local detection data.
+              Auto-refreshes every 5 seconds from dashboard logs.
             </p>
           </div>
 
@@ -363,12 +363,20 @@ export default function DashboardHome() {
           <div className="monitor-card">
             <h3>Total Active Threats</h3>
             <p className="monitor-value attack">{activeThreats}</p>
-            <p className="monitor-meta">Stored attack log entries</p>
+            <p className="monitor-meta">Stored prediction log entries</p>
           </div>
 
           <div className="monitor-card">
             <h3>Detection Accuracy</h3>
-            <p className="monitor-value">{detectionAccuracy}%</p>
+            <p
+              className={`monitor-value ${
+                totalPredictions === 0 ? "monitor-value-sm" : ""
+              }`}
+            >
+              {totalPredictions > 0
+                ? `${detectionAccuracy}%`
+                : "No data yet"}
+            </p>
             <p className="monitor-meta">Average prediction confidence</p>
           </div>
 
@@ -421,7 +429,7 @@ export default function DashboardHome() {
 
       <div className="panel dashboard-panel live-activity-panel">
         <h2 className="page-title">Recent Threat Activity</h2>
-        <p className="page-subtitle">Latest 5 threats from attack logs.</p>
+        <p className="page-subtitle">Latest 5 threats from prediction logs.</p>
 
         {recentThreats.length === 0 ? (
           <div className="empty-state live-activity-empty">
@@ -470,7 +478,7 @@ export default function DashboardHome() {
       >
         <div className="ai-recommendations-header">
           <div>
-            <h2 className="page-title">AI Security Recommendations</h2>
+            <h2 className="page-title">Automated Security Recommendations</h2>
             <p className="page-subtitle">
               Dynamic defensive guidance based on dashboard threat analytics.
               Refreshes every 5 seconds.
@@ -516,7 +524,7 @@ export default function DashboardHome() {
         </div>
 
         <div className="ai-risk-summary">
-          <h3>AI-Generated Risk Summary</h3>
+          <h3>Automated Risk Summary</h3>
           <p>{securityInsights.riskSummary}</p>
         </div>
 
@@ -571,8 +579,8 @@ export default function DashboardHome() {
         <div className="analytics-insights-bar">
           <h3><span className="insight-icon">💡</span> Analytics Insights</h3>
           <ul className="insights-list">
-             {Number(attackRate) > 15 ? <li>Attack activity is currently elevated at {attackRate}%.</li> : <li>Normal traffic dominates recent predictions.</li>}
-             {criticalThreats > 0 ? <li>Critical threats demand immediate attention.</li> : (highThreats > 0 ? <li>Most threats are High severity.</li> : <li>Detection confidence remains stable.</li>)}
+             {totalPredictions === 0 ? <li>Run predictions to generate analytics insights.</li> : (Number(attackRate) > 15 ? <li>Attack activity is currently elevated at {attackRate}%.</li> : <li>Normal traffic dominates recent predictions.</li>)}
+             {totalPredictions === 0 ? <li>Confidence trends will appear after predictions.</li> : (criticalThreats > 0 ? <li>Critical threats demand immediate attention.</li> : (highThreats > 0 ? <li>Most threats are High severity.</li> : <li>Detection confidence remains stable.</li>))}
           </ul>
         </div>
 
@@ -592,7 +600,11 @@ export default function DashboardHome() {
           </div>
           <div className="card">
             <h3>Average Confidence</h3>
-            <p className="card-value">{detectionAccuracy}%</p>
+            <p className="card-value">
+              {totalPredictions > 0
+                ? `${detectionAccuracy}%`
+                : "No data yet"}
+            </p>
           </div>
           <div className="card">
             <h3>Attack Rate</h3>
@@ -605,7 +617,13 @@ export default function DashboardHome() {
            <div className="trend-summary-panel">
               <h3>Threat Trend Summary</h3>
               <div className="trend-indicator-box">
-                {Number(attackRate) >= 15 || criticalThreats > 0 ? (
+                {totalPredictions === 0 ? (
+                  <div className="trend-status decreasing">
+                    <span className="trend-arrow">↓</span>
+                    <h4>No trend data yet</h4>
+                    <p>Run single or batch predictions to generate trend analysis.</p>
+                  </div>
+                ) : (Number(attackRate) >= 15 || criticalThreats > 0 ? (
                   <div className="trend-status increasing">
                     <span className="trend-arrow">↑</span>
                     <h4>Increasing Threat Activity</h4>
@@ -623,7 +641,7 @@ export default function DashboardHome() {
                     <h4>Decreasing Threat Activity</h4>
                     <p>No significant threats detected recently.</p>
                   </div>
-                ))}
+                )))}
               </div>
            </div>
 

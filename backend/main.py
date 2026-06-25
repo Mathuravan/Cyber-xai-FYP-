@@ -41,7 +41,7 @@ SECRET_KEY = (
 
 ALGORITHM = "HS256"
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+ACCESS_TOKEN_EXPIRE_MINUTES = 480
 
 # =====================================
 # MODEL PATH
@@ -100,6 +100,7 @@ def _init_logs_db() -> None:
                 """
                 CREATE TABLE IF NOT EXISTS prediction_logs (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id TEXT,
                     timestamp TEXT,
                     input_json TEXT,
                     prediction TEXT,
@@ -109,11 +110,30 @@ def _init_logs_db() -> None:
                 )
                 """
             )
+            columns = {
+                row[1]
+                for row in connection.execute(
+                    "PRAGMA table_info(prediction_logs)"
+                )
+            }
+
+            if "user_id" not in columns:
+                connection.execute(
+                    "ALTER TABLE prediction_logs ADD COLUMN user_id TEXT"
+                )
+
+            connection.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_prediction_logs_user_id
+                ON prediction_logs(user_id)
+                """
+            )
     except Exception as error:
         print(f"Prediction log database init failed: {error}")
 
 
 def _save_prediction_log(
+    user_id: str,
     input_payload: dict,
     prediction: str,
     confidence: float,
@@ -125,6 +145,7 @@ def _save_prediction_log(
             connection.execute(
                 """
                 INSERT INTO prediction_logs (
+                    user_id,
                     timestamp,
                     input_json,
                     prediction,
@@ -132,9 +153,10 @@ def _save_prediction_log(
                     threat_level,
                     attack_type
                 )
-                VALUES (?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
+                    user_id,
                     datetime.utcnow().isoformat(timespec="seconds") + "Z",
                     json.dumps(input_payload),
                     prediction,
@@ -147,7 +169,33 @@ def _save_prediction_log(
         print(f"Prediction logging failed: {error}")
 
 
+def _save_prediction_logs(entries: list) -> None:
+    if not entries:
+        return
+
+    try:
+        with sqlite3.connect(LOGS_DB_PATH) as connection:
+            connection.executemany(
+                """
+                INSERT INTO prediction_logs (
+                    user_id,
+                    timestamp,
+                    input_json,
+                    prediction,
+                    confidence,
+                    threat_level,
+                    attack_type
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                entries,
+            )
+    except Exception as error:
+        print(f"Batch prediction logging failed: {error}")
+
+
 def _fetch_prediction_logs(
+    user_id: str,
     page: int,
     limit: int,
     threat_type: str = None,
@@ -157,8 +205,8 @@ def _fetch_prediction_logs(
     limit = min(max(int(limit), 1), 100)
     offset = (page - 1) * limit
 
-    where_clauses = []
-    params = []
+    where_clauses = ["user_id = ?"]
+    params = [user_id]
 
     if threat_type:
         where_clauses.append(
@@ -488,7 +536,15 @@ def verify_token(authorization: str) -> str:
             SECRET_KEY,
             algorithms=[ALGORITHM],
         )
-        return payload.get("sub")
+        username = payload.get("sub")
+
+        if not username:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid token subject",
+            )
+
+        return username
     except jwt.ExpiredSignatureError:
         raise HTTPException(
             status_code=401,
@@ -994,6 +1050,7 @@ def predict(
         }
 
         _save_prediction_log(
+            username,
             _features_to_dict(data),
             response["label"],
             response["confidence"],
@@ -1021,9 +1078,13 @@ def api_logs(
     limit: int = 20,
     threat_type: str = None,
     severity: str = None,
+    authorization: str = Header(None),
 ):
+    username = verify_token(authorization)
+
     try:
         return _fetch_prediction_logs(
+            username,
             page,
             limit,
             threat_type,
@@ -1238,6 +1299,33 @@ async def predict_batch(
                     "label": row["label"],
                     "confidence": round(float(row["confidence"]), 4),
                 })
+
+        log_entries = []
+        log_timestamp = datetime.utcnow().isoformat(timespec="seconds") + "Z"
+        for _, row in df_results.iterrows():
+            label = str(row["label"])
+            confidence = round(float(row["confidence"]), 4)
+            threat_level = (
+                get_severity(confidence)
+                if label == "Attack"
+                else "Safe"
+            )
+            input_payload = {
+                feature: float(row.get(feature, 0))
+                for feature in FEATURES
+            }
+
+            log_entries.append((
+                username,
+                log_timestamp,
+                json.dumps(input_payload),
+                label,
+                confidence,
+                threat_level,
+                label,
+            ))
+
+        _save_prediction_logs(log_entries)
 
         return {
             "filename": file.filename,

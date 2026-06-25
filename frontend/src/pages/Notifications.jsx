@@ -171,8 +171,7 @@ export default function Notifications() {
         <div>
           <h1>Security Notifications</h1>
           <p>
-            Centralized alert monitoring for CyberXAI threat
-            detections.
+            Centralized notification view for CyberXAI prediction-based detections.
           </p>
         </div>
 
@@ -230,7 +229,7 @@ export default function Notifications() {
       <div className="panel dashboard-panel notifications-controls-panel">
         <h2 className="page-title">Alert Controls</h2>
         <p className="page-subtitle">
-          Filter by severity or search by threat label and timestamp.
+          Filter by severity or search by prediction label and timestamp.
         </p>
 
         <div className="logs-toolbar">
@@ -238,7 +237,7 @@ export default function Notifications() {
             <input
               type="search"
               className="logs-search-input"
-              placeholder="Search threat label or timestamp..."
+              placeholder="Search prediction label or timestamp..."
               value={searchQuery}
               onChange={(event) =>
                 setSearchQuery(event.target.value)
@@ -287,7 +286,7 @@ export default function Notifications() {
           <div className="panel dashboard-panel empty-state">
             <p>
               No security notifications found. Run predictions to
-              populate CyberXAI attack logs.
+              populate CyberXAI prediction logs.
             </p>
           </div>
         ) : filteredNotifications.length === 0 ? (

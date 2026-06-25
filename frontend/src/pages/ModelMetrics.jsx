@@ -81,7 +81,7 @@ export default function ModelMetrics() {
         <h1>Model Performance</h1>
         <p>
           NSL-KDD Random Forest evaluation metrics, confusion matrix, and
-          feature importance for supervisor review.
+          feature importance for model evaluation.
         </p>
       </div>
 

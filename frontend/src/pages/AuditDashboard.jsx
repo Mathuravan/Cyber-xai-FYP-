@@ -5,7 +5,6 @@ import {
   getAttackRate,
   getCriticalThreatCount,
   getHighThreatCount,
-  getLatestThreat,
   getDetectionAccuracy,
   getPredictionHistory,
 } from "../services/storageService"
@@ -19,7 +18,7 @@ export default function AuditDashboard() {
   const criticalThreats = getCriticalThreatCount()
   const highThreats = getHighThreatCount()
 
-  const latestThreat = getLatestThreat()
+  const latestPrediction = getPredictionHistory()[0] || null
   const detectionAccuracy = getDetectionAccuracy()
 
   const recentEvents = getPredictionHistory().slice(0, 10)
@@ -64,7 +63,9 @@ export default function AuditDashboard() {
           <div className="audit-status-card">
             <h3>Detection Accuracy</h3>
             <p className="audit-status-active">
-              {detectionAccuracy}%
+              {totalPredictions > 0
+                ? `${detectionAccuracy}%`
+                : "No data yet"}
             </p>
           </div>
 
@@ -91,29 +92,29 @@ export default function AuditDashboard() {
         </div>
       </div>
 
-      {/* Latest Threat */}
+      {/* Latest Prediction */}
       <div className="panel dashboard-panel">
-        <h2>Latest Threat Information</h2>
+        <h2>Latest Prediction Information</h2>
 
-        {latestThreat ? (
+        {latestPrediction ? (
           <>
             <p>
-              <strong>Source:</strong>{" "}
-              {latestThreat.source}
+              <strong>Prediction:</strong>{" "}
+              {latestPrediction.label}
             </p>
 
             <p>
               <strong>Timestamp:</strong>{" "}
-              {latestThreat.timestamp}
+              {latestPrediction.timestamp}
             </p>
 
             <p>
               <strong>Confidence:</strong>{" "}
-              {(Number(latestThreat.confidence) * 100).toFixed(1)}%
+              {(Number(latestPrediction.confidence) * 100).toFixed(1)}%
             </p>
           </>
         ) : (
-          <p>No threat records available.</p>
+          <p>No prediction records available.</p>
         )}
       </div>
 
@@ -155,9 +156,9 @@ export default function AuditDashboard() {
         <h2>Audit Recommendations</h2>
 
         <ul>
-          <li>Review recent attack logs regularly</li>
-          <li>Monitor high severity threats</li>
-          <li>Generate PDF security reports weekly</li>
+          <li>Review recent prediction logs regularly</li>
+          <li>Monitor high severity predictions</li>
+          <li>Generate PDF security reports when required</li>
           <li>Review model performance metrics</li>
           <li>Run batch traffic analysis periodically</li>
         </ul>

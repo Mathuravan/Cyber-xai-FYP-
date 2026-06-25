@@ -145,7 +145,7 @@ export default function ResilienceDashboard() {
         <article className={`resilience-metric ${getMetricTone(stability)}`}>
           <span>Model Stability Index</span>
           <strong>{result ? `${stability}%` : "--"}</strong>
-          <small>Track-level resistance</small>
+          <small>Model-level resistance</small>
         </article>
 
         <article className={`resilience-metric ${getMetricTone(resistanceScore)}`}>

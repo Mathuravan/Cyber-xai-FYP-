@@ -320,7 +320,7 @@ export default function LogsPage() {
 
   const handleClearLogs = () => {
     const confirmed = window.confirm(
-      "Are you sure you want to clear all attack logs?"
+      "Are you sure you want to clear all prediction logs?"
     )
 
     if (!confirmed) return
@@ -370,7 +370,7 @@ export default function LogsPage() {
     <div className="predict-page">
       <div className="topbar logs-header">
         <div>
-          <h1>Attack Logs</h1>
+          <h1>Prediction Logs</h1>
           <p>
             Search, filter, analyze, and export intrusion
             detection history.
@@ -440,7 +440,7 @@ export default function LogsPage() {
 
       {threatReport && (
         <div className="panel dashboard-panel threat-report-panel">
-          <h2 className="page-title">Threat Report Summary</h2>
+          <h2 className="page-title">Prediction Report Summary</h2>
           <p className="page-subtitle">
             Dashboard statistics for the currently filtered log view.
             Generated {threatReport.generatedAt}
@@ -455,7 +455,7 @@ export default function LogsPage() {
             </div>
 
             <div className="card critical-card">
-              <h3>Highest Confidence Threat</h3>
+              <h3>Highest Confidence Prediction</h3>
               <p className="card-value attack">
                 {(
                   Number(
@@ -488,7 +488,7 @@ export default function LogsPage() {
       )}
 
       <div className="panel dashboard-panel logs-controls-panel">
-        <h2 className="page-title">Threat Log Controls</h2>
+        <h2 className="page-title">Prediction Log Controls</h2>
         <p className="page-subtitle">
           Search by label, timestamp, or source. Export downloads
           filtered logs only.
@@ -544,12 +544,12 @@ export default function LogsPage() {
       </div>
 
       <div className="panel dashboard-panel results-table-panel logs-table-panel">
-        <h2>Recent Threats</h2>
+        <h2>Recent Predictions</h2>
 
         {logs.length === 0 ? (
           <div className="empty-state">
             <p>
-              No attack logs found. The system is currently secure.
+              No prediction logs found. The system is currently secure.
             </p>
           </div>
         ) : filteredLogs.length === 0 ? (
@@ -566,7 +566,7 @@ export default function LogsPage() {
                 <tr>
                   <th>Timestamp</th>
                   <th>Source</th>
-                  <th>Threat Type</th>
+                  <th>Prediction Type</th>
                   <th>Severity</th>
                   <th>Confidence</th>
                 </tr>

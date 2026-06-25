@@ -288,8 +288,7 @@ export default function SinglePredict() {
         <h1>Single Prediction</h1>
 
         <p>
-          Analyze a single NSL-KDD network flow using the
-          CyberXAI intrusion detection API.
+          Analyze one NSL-KDD network flow using selected traffic features.
         </p>
       </div>
 
@@ -410,7 +409,7 @@ export default function SinglePredict() {
                   : "normal-glow"
               }`}
             >
-              <h3>Threat Explanation (XAI)</h3>
+              <h3>Prediction Explanation (XAI)</h3>
 
               <p>
                 <strong>Severity:</strong>{" "}
@@ -453,7 +452,7 @@ export default function SinglePredict() {
 
                 {result.topSuspicious && result.topSuspicious.value > 0 && (
                   <div className="shap-top-feature">
-                    <strong>Most suspicious:</strong>
+                    <strong>Top contributing feature:</strong>
                     <span>{result.topSuspicious.label}</span>
                     <span>({result.topSuspicious.value.toFixed(2)})</span>
                   </div>

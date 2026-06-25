@@ -955,6 +955,35 @@
   background: rgba(34, 197, 94, 0.18);
 }
 
+[data-theme="light"] .shap-top-feature {
+  color: #7f1d1d;
+  background: #fee2e2;
+  border-color: #ef4444;
+}
+
+[data-theme="light"] .shap-score {
+  color: #334155;
+  font-weight: 700;
+}
+
+[data-theme="light"] .shap-impact-label.high {
+  color: #7f1d1d;
+  background: #fee2e2;
+  border: 1px solid #ef4444;
+}
+
+[data-theme="light"] .shap-impact-label.medium {
+  color: #78350f;
+  background: #fef3c7;
+  border: 1px solid #d97706;
+}
+
+[data-theme="light"] .shap-impact-label.low {
+  color: #064e3b;
+  background: #d1fae5;
+  border: 1px solid #059669;
+}
+
 .shap-bar-track {
   width: 100%;
   height: 10px;

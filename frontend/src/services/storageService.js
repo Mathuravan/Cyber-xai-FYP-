@@ -7,13 +7,39 @@ const KEYS = {
   resilienceSummary: "cyberxai_resilience_summary",
 };
 
+const AUTH_USER_KEY = "cyberxai_user";
+
+function getStorageUserId() {
+  try {
+    const user = JSON.parse(
+      localStorage.getItem(AUTH_USER_KEY) || "null"
+    );
+    const identifier = user?.username || user?.email;
+
+    if (identifier) {
+      return String(identifier)
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9@._-]/g, "_");
+    }
+  } catch {
+    // Fall through to the guest namespace.
+  }
+
+  return "guest";
+}
+
+function getScopedKey(key) {
+  return `${key}_${getStorageUserId()}`;
+}
+
 // =======================
 // LATEST PREDICTION
 // =======================
 export const getLatestPrediction = () => {
   try {
     return JSON.parse(
-      localStorage.getItem(KEYS.latest) || "null"
+      localStorage.getItem(getScopedKey(KEYS.latest)) || "null"
     );
   } catch {
     return null;
@@ -26,7 +52,7 @@ export const getLatestPrediction = () => {
 export const getCsvSummary = () => {
   try {
     return JSON.parse(
-      localStorage.getItem(KEYS.csv) || "null"
+      localStorage.getItem(getScopedKey(KEYS.csv)) || "null"
     );
   } catch {
     return null;
@@ -39,7 +65,7 @@ export const getCsvSummary = () => {
 export const getAttackLogs = () => {
   try {
     return JSON.parse(
-      localStorage.getItem(KEYS.logs) || "[]"
+      localStorage.getItem(getScopedKey(KEYS.logs)) || "[]"
     );
   } catch {
     return [];
@@ -51,7 +77,7 @@ export const getAttackLogs = () => {
 // =======================
 export const saveLatestPrediction = (data) => {
   localStorage.setItem(
-    KEYS.latest,
+    getScopedKey(KEYS.latest),
     JSON.stringify(data)
   );
 };
@@ -61,7 +87,7 @@ export const saveLatestPrediction = (data) => {
 // =======================
 export const saveCsvSummary = (data) => {
   localStorage.setItem(
-    KEYS.csv,
+    getScopedKey(KEYS.csv),
     JSON.stringify(data)
   );
 };
@@ -75,7 +101,7 @@ export const addAttackLog = (log) => {
   logs.unshift(log);
 
   localStorage.setItem(
-    KEYS.logs,
+    getScopedKey(KEYS.logs),
     JSON.stringify(logs)
   );
 };
@@ -91,7 +117,7 @@ export const addMultipleAttackLogs = (newLogs) => {
   logs.unshift(...newLogs);
 
   localStorage.setItem(
-    KEYS.logs,
+    getScopedKey(KEYS.logs),
     JSON.stringify(logs)
   );
 };
@@ -101,7 +127,7 @@ export const addMultipleAttackLogs = (newLogs) => {
 // =======================
 export const clearAttackLogs = () => {
   localStorage.setItem(
-    KEYS.logs,
+    getScopedKey(KEYS.logs),
     JSON.stringify([])
   );
 };
@@ -117,7 +143,7 @@ export const getPredictionHistory = () => {
   try {
     return JSON.parse(
       localStorage.getItem(
-        HISTORY_KEY
+        getScopedKey(HISTORY_KEY)
       ) || "[]"
     );
   } catch {
@@ -134,7 +160,7 @@ export const savePredictionHistory = (
   history.unshift(prediction);
 
   localStorage.setItem(
-    HISTORY_KEY,
+    getScopedKey(HISTORY_KEY),
     JSON.stringify(history)
   );
 };
@@ -142,7 +168,7 @@ export const savePredictionHistory = (
 export const clearPredictionHistory =
   () => {
     localStorage.setItem(
-      HISTORY_KEY,
+      getScopedKey(HISTORY_KEY),
       JSON.stringify([])
     );
   };
@@ -321,7 +347,7 @@ const getColumnSignature = (columns = []) => {
 export const getCsvMappings = () => {
   try {
     return JSON.parse(
-      localStorage.getItem(KEYS.csvMappings) || "{}"
+      localStorage.getItem(getScopedKey(KEYS.csvMappings)) || "{}"
     );
   } catch {
     return {};
@@ -343,7 +369,7 @@ export const saveCsvMapping = (columns = [], mapping = {}) => {
   };
 
   localStorage.setItem(
-    KEYS.csvMappings,
+    getScopedKey(KEYS.csvMappings),
     JSON.stringify(mappings)
   );
 };
@@ -354,7 +380,7 @@ export const saveCsvMapping = (columns = [], mapping = {}) => {
 
 export const saveXaiSummary = (summary) => {
   localStorage.setItem(
-    KEYS.xaiSummary,
+    getScopedKey(KEYS.xaiSummary),
     JSON.stringify({
       ...summary,
       savedAt: new Date().toISOString(),
@@ -365,7 +391,7 @@ export const saveXaiSummary = (summary) => {
 export const getXaiSummary = () => {
   try {
     return JSON.parse(
-      localStorage.getItem(KEYS.xaiSummary) || "null"
+      localStorage.getItem(getScopedKey(KEYS.xaiSummary)) || "null"
     );
   } catch {
     return null;
@@ -374,7 +400,7 @@ export const getXaiSummary = () => {
 
 export const saveResilienceSummary = (summary) => {
   localStorage.setItem(
-    KEYS.resilienceSummary,
+    getScopedKey(KEYS.resilienceSummary),
     JSON.stringify({
       ...summary,
       savedAt: new Date().toISOString(),
@@ -385,7 +411,7 @@ export const saveResilienceSummary = (summary) => {
 export const getResilienceSummary = () => {
   try {
     return JSON.parse(
-      localStorage.getItem(KEYS.resilienceSummary) || "null"
+      localStorage.getItem(getScopedKey(KEYS.resilienceSummary)) || "null"
     );
   } catch {
     return null;

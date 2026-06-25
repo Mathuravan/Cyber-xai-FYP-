@@ -442,7 +442,7 @@ export default function BatchUpload() {
     <div className="predict-page">
       <div className="topbar">
         <h1>Batch CSV Prediction</h1>
-        <p>Upload any network CSV, confirm column mappings, and run bulk intrusion analysis.</p>
+        <p>Upload CSV traffic records and run batch intrusion analysis through the CyberXAI detection API.</p>
       </div>
 
       <div className="panel dashboard-panel">

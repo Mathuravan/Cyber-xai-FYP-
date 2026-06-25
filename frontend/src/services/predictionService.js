@@ -160,6 +160,40 @@ export const fetchModelMetrics = async () => {
 
 
 // =====================================
+// USER PREDICTION LOGS
+// =====================================
+export const fetchPredictionLogs = async (limit = 100) => {
+
+  const token = getToken()
+  if (!token) {
+    throw new Error("Authentication required")
+  }
+
+  const res = await fetch(
+    `${API_BASE}/api/logs?limit=${limit}`,
+    {
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+    }
+  )
+
+  if (!res.ok) {
+    throw new Error(await parseError(res))
+  }
+
+  const data = await res.json()
+
+  if (!data || !Array.isArray(data.logs)) {
+    throw new Error("Unexpected logs response")
+  }
+
+  return data.logs
+
+}
+
+
+// =====================================
 // COMBINED XAI EXPLANATION (SHAP + LIME)
 // =====================================
 export const explainCombined = async (features) => {

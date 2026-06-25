@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react"
 import {
   getTotalPredictions,
   getAttackCount,
@@ -5,11 +6,22 @@ import {
   getAttackRate,
   getCriticalThreatCount,
   getHighThreatCount,
-  getLatestThreat,
   getDetectionAccuracy,
+  getPredictionHistory,
 } from "../services/storageService"
+import { fetchPredictionLogs } from "../services/predictionService"
+
+function mapBackendLog(log) {
+  return {
+    label: log.prediction || log.attack_type || "Prediction",
+    confidence: Number(log.confidence) || 0,
+    timestamp: log.timestamp || "",
+    source: log.attack_type || "Prediction log",
+  }
+}
 
 export default function SecurityCenter() {
+  const [latestPrediction, setLatestPrediction] = useState(null)
   const totalPredictions = getTotalPredictions()
   const attackCount = getAttackCount()
   const normalCount = getNormalCount()
@@ -18,8 +30,31 @@ export default function SecurityCenter() {
   const criticalThreats = getCriticalThreatCount()
   const highThreats = getHighThreatCount()
 
-  const latestThreat = getLatestThreat()
   const detectionAccuracy = getDetectionAccuracy()
+
+  useEffect(() => {
+    let isMounted = true
+
+    fetchPredictionLogs(1)
+      .then((logs) => {
+        if (isMounted) {
+          setLatestPrediction(
+            logs.length > 0
+              ? mapBackendLog(logs[0])
+              : getPredictionHistory()[0] || null
+          )
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setLatestPrediction(getPredictionHistory()[0] || null)
+        }
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const securityScore = Math.max(
     0,
@@ -40,7 +75,7 @@ export default function SecurityCenter() {
   return (
     <div className="security-center-page">
       <div className="topbar">
-        <h1>Security Operations Center</h1>
+        <h1>Security Analytics Center</h1>
         <p>
           Centralized monitoring dashboard for CyberXAI security analytics.
         </p>
@@ -95,6 +130,7 @@ export default function SecurityCenter() {
         </div>
 
         <p className="soc-score-value">
+          {totalPredictions === 0 ? "Baseline " : ""}
           {securityScore}
           <span>/100</span>
         </p>
@@ -104,32 +140,44 @@ export default function SecurityCenter() {
         <h2>Detection Analytics</h2>
         <p className="soc-metric-line">
           <span>Detection Accuracy</span>
-          <strong>{detectionAccuracy}%</strong>
+          <strong>
+            {totalPredictions > 0
+              ? `${detectionAccuracy}%`
+              : "No data yet"}
+          </strong>
         </p>
       </div>
 
       <div className="panel dashboard-panel">
-        <h2>Latest Threat</h2>
+        <h2>Latest Prediction</h2>
 
-        {latestThreat ? (
+        {latestPrediction ? (
           <div className="soc-detail-grid">
             <p>
-              <span>Source</span>
-              <strong>{latestThreat.source}</strong>
+              <span>Prediction</span>
+              <strong>{latestPrediction.label}</strong>
             </p>
             <p>
               <span>Timestamp</span>
-              <strong>{latestThreat.timestamp}</strong>
+              <strong>{latestPrediction.timestamp || "Not available"}</strong>
             </p>
             <p>
               <span>Confidence</span>
               <strong>
-                {(Number(latestThreat.confidence) * 100).toFixed(1)}%
+                {(Number(latestPrediction.confidence) * 100).toFixed(1)}%
               </strong>
             </p>
+            {latestPrediction.source && (
+              <p>
+                <span>Source</span>
+                <strong>{latestPrediction.source}</strong>
+              </p>
+            )}
           </div>
+        ) : totalPredictions === 0 ? (
+          <p className="soc-empty">No prediction recorded yet.</p>
         ) : (
-          <p className="soc-empty">No threat recorded yet.</p>
+          <p className="soc-empty">Loading latest prediction...</p>
         )}
       </div>
 
@@ -137,7 +185,7 @@ export default function SecurityCenter() {
         <h2>Recommended Actions</h2>
 
         <ul className="soc-action-list">
-          <li>Review Attack Logs</li>
+          <li>Review Prediction Logs</li>
           <li>Generate Executive PDF Report</li>
           <li>Run Batch CSV Analysis</li>
           <li>Review Model Performance</li>

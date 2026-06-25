@@ -49,7 +49,7 @@ const MENU_ITEMS = [
   {
     to: "/dashboard/security-center",
     label: "Security Center",
-    desc: "Policies & response actions",
+    desc: "Guidance & response actions",
     icon: "S",
   },
   {

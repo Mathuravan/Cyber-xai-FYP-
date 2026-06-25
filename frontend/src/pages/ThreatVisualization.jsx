@@ -5,6 +5,7 @@ import {
   getPredictionHistory,
   getThreatSeverityLabel,
 } from "../services/storageService"
+import { fetchPredictionLogs } from "../services/predictionService"
 
 const REFRESH_INTERVAL_MS = 5000
 const TIMELINE_BUCKET_LIMIT = 12
@@ -55,6 +56,15 @@ function getTimeLabel(timestamp) {
 
 function getSeverityClass(confidence) {
   return getThreatSeverityLabel(confidence).toLowerCase()
+}
+
+function mapBackendLog(log) {
+  return {
+    label: log.prediction || log.attack_type || "Prediction",
+    confidence: Number(log.confidence) || 0,
+    timestamp: log.timestamp || "",
+    source: log.attack_type || "Prediction log",
+  }
 }
 
 function buildTimeline(history) {
@@ -241,9 +251,25 @@ export default function ThreatVisualization() {
 
   useEffect(() => {
     const refreshData = () => {
-      setAttackLogs(getAttackLogs())
-      setPredictionHistory(getPredictionHistory())
+      const fallbackHistory = getPredictionHistory()
+      const fallbackAttacks = getAttackLogs()
+
+      setAttackLogs(fallbackAttacks)
+      setPredictionHistory(fallbackHistory)
       setLastUpdated(new Date())
+
+      fetchPredictionLogs(100)
+        .then((logs) => {
+          if (logs.length > 0) {
+            const mappedLogs = logs.map(mapBackendLog)
+            setPredictionHistory(mappedLogs)
+            setAttackLogs(mappedLogs.filter(isAttack))
+          }
+        })
+        .catch(() => {
+          setPredictionHistory(fallbackHistory)
+          setAttackLogs(fallbackAttacks)
+        })
     }
 
     refreshData()
@@ -289,8 +315,8 @@ export default function ThreatVisualization() {
   )
 
   const liveThreats = useMemo(
-    () => attackLogs.slice(0, LIVE_FEED_LIMIT),
-    [attackLogs]
+    () => predictionHistory.slice(0, LIVE_FEED_LIMIT),
+    [predictionHistory]
   )
 
   return (
@@ -299,7 +325,7 @@ export default function ThreatVisualization() {
         <div>
           <h1>Threat Visualization</h1>
           <p>
-            Interactive threat intelligence views powered by stored
+            Interactive prediction analytics views powered by stored
             CyberXAI prediction logs.
           </p>
         </div>
@@ -341,7 +367,7 @@ export default function ThreatVisualization() {
           label="Active Threat Count"
           value={analytics.activeThreatCount}
           tone="active"
-          meta="Stored attack log entries"
+          meta="Stored prediction log entries"
         />
       </div>
 
@@ -366,7 +392,7 @@ export default function ThreatVisualization() {
         <section className="panel dashboard-panel threat-viz-panel">
           <h2 className="page-title">Severity Distribution</h2>
           <p className="page-subtitle">
-            Critical, high, medium, and low severity attack logs.
+            Critical, high, medium, and low severity prediction logs.
           </p>
           <HorizontalBars
             data={severityData}
@@ -392,7 +418,7 @@ export default function ThreatVisualization() {
         <section className="panel dashboard-panel threat-viz-panel">
           <h2 className="page-title">Top Threat Sources</h2>
           <p className="page-subtitle">
-            Most frequent sources found in attack logs.
+            Most frequent sources found in prediction logs.
           </p>
           <HorizontalBars
             data={topSources}
@@ -405,21 +431,26 @@ export default function ThreatVisualization() {
         <section className="panel dashboard-panel threat-viz-panel live-feed-panel">
           <div className="threat-viz-panel-header">
             <div>
-              <h2 className="page-title">Prototype Threat Feed</h2>
+              <h2 className="page-title">Prototype Prediction Feed</h2>
               <p className="page-subtitle">
-                Latest 10 threats, refreshed every 5 seconds.
+                Latest 10 prediction records, refreshed every 5 seconds.
               </p>
             </div>
           </div>
 
           {liveThreats.length === 0 ? (
             <div className="threat-viz-empty">
-              No stored threats available.
+              No stored prediction records available.
             </div>
           ) : (
             <ul className="threat-feed-list">
               {liveThreats.map((threat, index) => {
-                const severityClass = getSeverityClass(threat.confidence)
+                const severityClass = isAttack(threat)
+                  ? getSeverityClass(threat.confidence)
+                  : "low"
+                const severityLabel = isAttack(threat)
+                  ? getThreatSeverityLabel(threat.confidence)
+                  : "Normal"
 
                 return (
                   <li
@@ -430,12 +461,12 @@ export default function ThreatVisualization() {
                       <span className="threat-feed-time">
                         {getTimeLabel(threat.timestamp)}
                       </span>
-                      <strong>{threat.label || "Attack"}</strong>
-                      <span>{threat.source || "Unknown source"}</span>
+                      <strong>{threat.label || "Prediction"}</strong>
+                      <span>{threat.source || "Prediction history"}</span>
                     </div>
                     <div className="threat-feed-meta">
                       <span className={`severity-badge ${severityClass}`}>
-                        {getThreatSeverityLabel(threat.confidence)}
+                        {severityLabel}
                       </span>
                       <strong>{formatConfidence(threat.confidence)}</strong>
                     </div>

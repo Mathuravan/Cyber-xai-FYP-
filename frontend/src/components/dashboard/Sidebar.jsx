@@ -2,7 +2,7 @@ const MENU_ITEMS = [
   { id: "overview", label: "Overview" },
   { id: "predict", label: "Single predict" },
   { id: "batch", label: "Batch CSV" },
-  { id: "logs", label: "Attack logs" },
+  { id: "logs", label: "Prediction logs" },
 ]
 
 export default function Sidebar({ activeMenu, onMenuClick, onLogout }) {
